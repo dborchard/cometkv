@@ -16,10 +16,10 @@ type KV interface {
 
 var _ KV = new(CometKV)
 
-type MemTableType int
+type MemtableTyp int
 
 const (
-	SegmentRing MemTableType = iota
+	SegmentRing MemtableTyp = iota
 	VacuumSkipList
 	VacuumBTree
 	VacuumCoW
