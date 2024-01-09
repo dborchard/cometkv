@@ -2,6 +2,7 @@ package segment_ring
 
 import (
 	"cometkv/pkg/b_memtable"
+	"cometkv/pkg/b_memtable/base"
 	"cometkv/pkg/y_common"
 	"cometkv/pkg/y_common/timestamp"
 	"container/list"
@@ -12,7 +13,7 @@ import (
 
 // SegmentRing Ephemeral Copy-Ahead MV Tree
 type SegmentRing struct {
-	base *memtable.EMBase
+	base *base.EMBase
 
 	segments []*Segment
 
@@ -35,7 +36,7 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 	sr.cycleDuration = int64(time.Duration(float64(totalSegments) * float64(gcInterval)).Seconds())
 	sr.init(totalSegments, ctx)
 
-	sr.base = memtable.NewBase(&sr, gcInterval, ttl, logStats)
+	sr.base = base.NewBase(&sr, gcInterval, ttl, logStats)
 	go sr.StartGc(gcInterval, ctx)
 
 	return &sr

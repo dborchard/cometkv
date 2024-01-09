@@ -2,6 +2,7 @@ package hwt_btree
 
 import (
 	"cometkv/pkg/b_memtable"
+	"cometkv/pkg/b_memtable/base"
 	"cometkv/pkg/y_common"
 	"cometkv/pkg/y_common/timestamp"
 	"context"
@@ -11,7 +12,7 @@ import (
 )
 
 type EphemeralMemtable struct {
-	base *memtable.EMBase
+	base *base.EMBase
 
 	timer *timingwheel.TimingWheel
 	tree  *btree.BTreeG[common.Pair[[]byte, []byte]]
@@ -30,7 +31,7 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 	})
 
 	bt.timer = timingwheel.NewTimingWheel(time.Second, int64(ttl.Seconds()))
-	bt.base = memtable.NewBase(&bt, gcInterval, ttl, logStats)
+	bt.base = base.NewBase(&bt, gcInterval, ttl, logStats)
 	go bt.StartGc(gcInterval, ctx)
 	go bt.timer.Start()
 

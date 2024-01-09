@@ -2,6 +2,7 @@ package vacuum_skiplist
 
 import (
 	"cometkv/pkg/b_memtable"
+	"cometkv/pkg/b_memtable/base"
 	"cometkv/pkg/b_memtable/vacuum_skiplist/sl"
 	"cometkv/pkg/y_common"
 	"cometkv/pkg/y_common/timestamp"
@@ -10,7 +11,7 @@ import (
 )
 
 type EphemeralMemtable struct {
-	base *memtable.EMBase
+	base *base.EMBase
 	list sl.SkipList[[]byte, []byte]
 }
 
@@ -21,7 +22,7 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 		return common.CompareKeys(lhs, rhs)
 	}, sl.WithMutex())
 
-	tbl.base = memtable.NewBase(&tbl, gcInterval, ttl, logStats)
+	tbl.base = base.NewBase(&tbl, gcInterval, ttl, logStats)
 	go tbl.StartGc(gcInterval, ctx)
 
 	return &tbl
