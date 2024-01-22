@@ -109,11 +109,11 @@ func BenchmarkAll(b *testing.B) {
 		return entry.CompareKeys(a.Key, b.Key) < 0
 	})
 	internalKey := entry.KeyWithTs([]byte("Arjun"), timestamp.ToUnit64(time.Now()))
-	entry := entry.Pair[[]byte, *list.Element]{Key: internalKey, Val: nil}
+	pair := entry.Pair[[]byte, *list.Element]{Key: internalKey, Val: nil}
 	b.Run("Tree Insert", func(b *testing.B) {
 		b.ResetTimer()
 		for n := 0; n < b.N; n++ {
-			tree.Set(entry)
+			tree.Set(pair)
 		}
 	})
 
@@ -144,7 +144,7 @@ func BenchmarkAll(b *testing.B) {
 	b.Run("ZenQ", func(b *testing.B) {
 		b.ResetTimer()
 		for n := 0; n < b.N; n++ {
-			zCh.Write(&entry)
+			zCh.Write(&pair)
 			zCh.Read()
 		}
 	})

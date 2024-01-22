@@ -10,18 +10,18 @@ import (
 )
 
 type CometKV struct {
-	memtable memtable.IMemtable
-	disk     diskio.SstIO
+	mem  memtable.IMemtable
+	disk diskio.SstIO
 
 	localInsertCounter          atomic.Int64
 	globalLongRangeScanCount    atomic.Int64
 	globalLongRangeScanDuration time.Duration
 }
 
-func NewCometKV(ctx context.Context, mTyp MemtableTyp, dTyp diskio.Type) *CometKV {
+func NewCometKV(ctx context.Context, mTyp MemtableTyp, dTyp diskio.Type, ttl, longRangeDuration time.Duration) KV {
 	kv := CometKV{
-		memtable: NewMemtable(mTyp, 10, 10, true, ctx),
-		disk:     diskio.New(dTyp),
+		mem:  NewMemtable(mTyp, longRangeDuration, ttl, true, ctx),
+		disk: diskio.New(dTyp),
 
 		localInsertCounter:          atomic.Int64{},
 		globalLongRangeScanCount:    atomic.Int64{},
@@ -31,12 +31,12 @@ func NewCometKV(ctx context.Context, mTyp MemtableTyp, dTyp diskio.Type) *CometK
 	return &kv
 }
 func (c *CometKV) Put(key string, val []byte) {
-	c.memtable.Put(key, val)
+	c.mem.Put(key, val)
 	c.localInsertCounter.Add(1)
 }
 
 func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
-	res := c.memtable.Scan(startKey, count, snapshotTs)
+	res := c.mem.Scan(startKey, count, snapshotTs)
 	if len(res) < count {
 		res = append(res, c.disk.Scan(startKey, count-len(res), snapshotTs)...)
 	}
@@ -44,7 +44,7 @@ func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry
 }
 
 func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
-	res := c.memtable.Get(key, snapshotTs)
+	res := c.mem.Get(key, snapshotTs)
 	if res == nil {
 		res = c.disk.Get(key, snapshotTs)
 	}
@@ -52,11 +52,11 @@ func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
 }
 
 func (c *CometKV) Delete(key string) {
-	c.memtable.Delete(key)
+	c.mem.Delete(key)
 }
 
 func (c *CometKV) Close() {
-	c.memtable.Close()
+	c.mem.Close()
 	c.disk.Destroy()
 }
 
@@ -76,7 +76,7 @@ func (c *CometKV) startFlushThread(longRangeDuration time.Duration, startLongRan
 
 					startTs := time.Now()
 
-					records := c.memtable.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
+					records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
 					_ = c.disk.Create(records)
 
 					endTs := time.Now()
@@ -88,4 +88,8 @@ func (c *CometKV) startFlushThread(longRangeDuration time.Duration, startLongRan
 			}
 		}
 	}()
+}
+
+func (c *CometKV) Name() string {
+	return c.mem.Name()
 }

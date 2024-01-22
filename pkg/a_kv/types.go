@@ -12,6 +12,8 @@ type KV interface {
 	Get(key string, snapshotTs time.Time) []byte
 	Delete(key string)
 	Close()
+
+	Name() string
 }
 
 var _ KV = new(CometKV)

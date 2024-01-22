@@ -4,7 +4,7 @@ import (
 	"cometkv/cmd/benchmark/generator"
 	"cometkv/cmd/benchmark/lotsaa"
 	kv "cometkv/pkg/a_kv"
-	memtable "cometkv/pkg/b_memtable"
+	sstio "cometkv/pkg/c_sst_storage"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -56,15 +56,15 @@ func main() {
 
 	fmt.Printf("GC used %s @ time %s \n", gcInterval, time.Now().Format("2006_01_02_15_04_05"))
 	for tc := scanThreadCount; tc <= 1024; tc = tc * 2 {
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.SegmentRing, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumCoW, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.HWTCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.MoRCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.SegmentRing, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumCoW, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
 
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumSkipList, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.MoRBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.HWTBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumSkipList, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
 
 		fmt.Printf("Batch Completed %s \n", time.Now().Format("2006_01_02_15_04_05"))
 		fmt.Println("----------------------------------------------------------------------------------------------")
@@ -78,7 +78,7 @@ func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Du
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 1. Build MemTable
-	tree := kv.NewCometKV(ctx, typ, nil)
+	tree := kv.NewCometKV(ctx, typ, sstio.MBtree, ttl, longRangeDuration)
 	tableName := tree.Name()
 
 	// 2.a Start Single Writer to the tree
@@ -115,7 +115,7 @@ func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Du
 	startGc()
 }
 
-func SingleWriter(keySpace int64, tree memtable.IMemtable, ctx context.Context) {
+func SingleWriter(keySpace int64, tree kv.KV, ctx context.Context) {
 	randSeq := rand.New(rand.NewSource(time.Now().UnixNano()))
 	keygen := generator.Build(generator.UNIFORM, 1, keySpace)
 
@@ -139,7 +139,7 @@ func SingleWriter(keySpace int64, tree memtable.IMemtable, ctx context.Context) 
 	}()
 }
 
-func MultiReader(tree memtable.IMemtable, tableName string, keySpace int64, scanWidth, threadCount int, testDuration, gcInterval time.Duration, variableWidth bool) {
+func MultiReader(tree kv.KV, tableName string, keySpace int64, scanWidth, threadCount int, testDuration, gcInterval time.Duration, variableWidth bool) {
 	fmt.Print(tableName, "			")
 
 	keyGen := generator.Build(generator.UNIFORM, 1, keySpace)
