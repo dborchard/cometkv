@@ -3,8 +3,8 @@ package mor_btree
 import (
 	"cometkv/pkg/b_memtable"
 	"cometkv/pkg/b_memtable/base"
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
+	"cometkv/pkg/y_internal/entry"
+	"cometkv/pkg/y_internal/timestamp"
 	"container/heap"
 	"context"
 	"github.com/tidwall/btree"
@@ -16,7 +16,7 @@ import (
 type MoRBTree struct {
 	sync.RWMutex
 	base                  *base.EMBase
-	segments              []*btree.BTreeG[common.Pair[[]byte, []byte]]
+	segments              []*btree.BTreeG[entry.Pair[[]byte, []byte]]
 	ttlValidSegmentsCount int
 	segmentDuration       time.Duration
 	cycleDuration         int64
@@ -42,11 +42,11 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 }
 
 func (s *MoRBTree) init(size int) {
-	s.segments = make([]*btree.BTreeG[common.Pair[[]byte, []byte]], size)
+	s.segments = make([]*btree.BTreeG[entry.Pair[[]byte, []byte]], size)
 
 	for i := 0; i < size; i++ {
-		s.segments[i] = btree.NewBTreeG(func(a, b common.Pair[[]byte, []byte]) bool {
-			return common.CompareKeys(a.Key, b.Key) < 0
+		s.segments[i] = btree.NewBTreeG(func(a, b entry.Pair[[]byte, []byte]) bool {
+			return entry.CompareKeys(a.Key, b.Key) < 0
 		})
 	}
 }
@@ -58,29 +58,29 @@ func (s *MoRBTree) Put(key string, val []byte) {
 	currTs := time.Now()
 	activeSegmentIdx := s.findSegmentIdx(currTs)
 
-	internalKey := common.KeyWithTs([]byte(key), timestamp.Now())
+	internalKey := entry.KeyWithTs([]byte(key), timestamp.Now())
 
-	s.segments[activeSegmentIdx].Set(common.Pair[[]byte, []byte]{
+	s.segments[activeSegmentIdx].Set(entry.Pair[[]byte, []byte]{
 		Key: internalKey,
 		Val: val,
 	})
 }
 
-func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
+func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	s.RLock()
 	defer s.RUnlock()
 
 	//0. Check if snapshotTs has already expired
 	if !timestamp.IsValidTs(snapshotTs, s.base.TTL) {
-		return []common.Pair[string, []byte]{}
+		return []entry.Pair[string, []byte]{}
 	}
 
 	//1. Get the Starting Segment
 	segmentIdx := s.findSegmentIdx(snapshotTs)
 
 	// 2.a Create Start Key
-	internalKey := common.KeyWithTs([]byte(startKey), timestamp.ToUnit64(snapshotTs))
-	startRow := common.Pair[[]byte, []byte]{Key: internalKey}
+	internalKey := entry.KeyWithTs([]byte(startKey), timestamp.ToUnit64(snapshotTs))
+	startRow := entry.Pair[[]byte, []byte]{Key: internalKey}
 
 	//2.b Init Heap
 	mh := &MinHeap{}
@@ -106,7 +106,7 @@ func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []comm
 	snapshotTsNano := timestamp.ToUnit64(snapshotTs)
 
 	for mh.Len() > 0 {
-		smallestIter := heap.Pop(mh).(*btree.IterG[common.Pair[[]byte, []byte]])
+		smallestIter := heap.Pop(mh).(*btree.IterG[entry.Pair[[]byte, []byte]])
 		item := smallestIter.Item()
 		if smallestIter.Next() {
 			heap.Push(mh, smallestIter)
@@ -119,12 +119,12 @@ func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []comm
 			break
 		}
 		// expiredTs < ItemTs < snapshotTs
-		itemTs := common.ParseTs(item.Key)
+		itemTs := entry.ParseTs(item.Key)
 		lessThanOrEqualToSnapshotTs := itemTs <= snapshotTsNano
 		greaterThanExpiredTs := timestamp.IsValidTsUint(itemTs, s.base.TTL)
 
 		if lessThanOrEqualToSnapshotTs && greaterThanExpiredTs {
-			strKey := string(common.ParseKey(item.Key))
+			strKey := string(entry.ParseKey(item.Key))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
 				if item.Val != nil {
@@ -136,11 +136,11 @@ func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []comm
 	}
 
 	for mh.Len() > 0 {
-		heap.Pop(mh).(*btree.IterG[common.Pair[[]byte, []byte]]).Release()
+		heap.Pop(mh).(*btree.IterG[entry.Pair[[]byte, []byte]]).Release()
 	}
 
 	// 2. Range Scan delegation
-	return common.MapToArray(uniqueKVs)
+	return entry.MapToArray(uniqueKVs)
 }
 
 func (s *MoRBTree) Prune(_ uint64) int {

@@ -3,7 +3,7 @@ package kv
 import (
 	"cometkv/pkg/b_memtable"
 	diskio "cometkv/pkg/c_sst_storage"
-	"cometkv/pkg/y_common"
+	"cometkv/pkg/y_internal/entry"
 	"context"
 	"sync/atomic"
 	"time"
@@ -11,7 +11,7 @@ import (
 
 type CometKV struct {
 	memtable memtable.IMemtable
-	disk     diskio.SstStorage
+	disk     diskio.SstIO
 
 	localInsertCounter          atomic.Int64
 	globalLongRangeScanCount    atomic.Int64
@@ -35,7 +35,7 @@ func (c *CometKV) Put(key string, val []byte) {
 	c.localInsertCounter.Add(1)
 }
 
-func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
+func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	res := c.memtable.Scan(startKey, count, snapshotTs)
 	if len(res) < count {
 		res = append(res, c.disk.Scan(startKey, count-len(res), snapshotTs)...)

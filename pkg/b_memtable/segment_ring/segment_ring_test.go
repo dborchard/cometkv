@@ -2,8 +2,8 @@ package segment_ring
 
 import (
 	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
+	"cometkv/pkg/y_internal/entry"
+	"cometkv/pkg/y_internal/timestamp"
 	"cometkv/pkg/z_tests"
 	"container/list"
 	"context"
@@ -105,11 +105,11 @@ func BenchmarkAll(b *testing.B) {
 	})
 
 	// BTree
-	tree := btree.NewBTreeG(func(a, b common.Pair[[]byte, *list.Element]) bool {
-		return common.CompareKeys(a.Key, b.Key) < 0
+	tree := btree.NewBTreeG(func(a, b entry.Pair[[]byte, *list.Element]) bool {
+		return entry.CompareKeys(a.Key, b.Key) < 0
 	})
-	internalKey := common.KeyWithTs([]byte("Arjun"), timestamp.ToUnit64(time.Now()))
-	entry := common.Pair[[]byte, *list.Element]{Key: internalKey, Val: nil}
+	internalKey := entry.KeyWithTs([]byte("Arjun"), timestamp.ToUnit64(time.Now()))
+	entry := entry.Pair[[]byte, *list.Element]{Key: internalKey, Val: nil}
 	b.Run("Tree Insert", func(b *testing.B) {
 		b.ResetTimer()
 		for n := 0; n < b.N; n++ {
@@ -127,8 +127,8 @@ func BenchmarkAll(b *testing.B) {
 	})
 
 	// Channel
-	ch := make(chan *common.Pair[[]byte, *list.Element], 100)
-	s := &common.Pair[[]byte, *list.Element]{}
+	ch := make(chan *entry.Pair[[]byte, *list.Element], 100)
+	s := &entry.Pair[[]byte, *list.Element]{}
 
 	b.Run("Channel Insert", func(b *testing.B) {
 		b.ResetTimer()
@@ -139,7 +139,7 @@ func BenchmarkAll(b *testing.B) {
 	})
 
 	// Channel
-	zCh := zenq.New[*common.Pair[[]byte, *list.Element]](100)
+	zCh := zenq.New[*entry.Pair[[]byte, *list.Element]](100)
 
 	b.Run("ZenQ", func(b *testing.B) {
 		b.ResetTimer()

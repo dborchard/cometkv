@@ -1,8 +1,8 @@
 package segment_ring
 
 import (
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
+	"cometkv/pkg/y_internal/entry"
+	"cometkv/pkg/y_internal/timestamp"
 	"container/list"
 	"context"
 	"github.com/alphadose/zenq/v2"
@@ -13,7 +13,7 @@ import (
 
 type Segment struct {
 	// Original Structure
-	tree *BTreeGCoW[common.Pair[[]byte, *list.Element]]
+	tree *BTreeGCoW[entry.Pair[[]byte, *list.Element]]
 	vlog *list.List
 	ctx  context.Context
 
@@ -21,17 +21,17 @@ type Segment struct {
 	nextPtr *Segment
 
 	// Async Logic
-	asyncKeyPtrChan *zenq.ZenQ[*common.Pair[[]byte, *list.Element]]
+	asyncKeyPtrChan *zenq.ZenQ[*entry.Pair[[]byte, *list.Element]]
 	done            atomic.Bool
 	pendingUpdates  atomic.Int64
 }
 
 type ISegment interface {
 	AddValue(val []byte) (lePtr *list.Element)
-	AddIndex(entry *common.Pair[[]byte, *list.Element])
-	AddIndexAsync(entry *common.Pair[[]byte, *list.Element])
+	AddIndex(entry *entry.Pair[[]byte, *list.Element])
+	AddIndexAsync(entry *entry.Pair[[]byte, *list.Element])
 
-	Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte]
+	Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte]
 	Free() int
 
 	Len() int
@@ -39,12 +39,12 @@ type ISegment interface {
 
 func NewSegment(ctx context.Context) *Segment {
 	segment := Segment{
-		tree: NewBTreeGCoW(func(a, b common.Pair[[]byte, *list.Element]) bool {
-			return common.CompareKeys(a.Key, b.Key) < 0
+		tree: NewBTreeGCoW(func(a, b entry.Pair[[]byte, *list.Element]) bool {
+			return entry.CompareKeys(a.Key, b.Key) < 0
 		}),
 		vlog:            list.New(),
 		ctx:             ctx,
-		asyncKeyPtrChan: zenq.New[*common.Pair[[]byte, *list.Element]](1 << 20),
+		asyncKeyPtrChan: zenq.New[*entry.Pair[[]byte, *list.Element]](1 << 20),
 		done:            atomic.Bool{},
 	}
 
@@ -68,7 +68,7 @@ func (s *Segment) StartListener() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		var entry *common.Pair[[]byte, *list.Element]
+		var entry *entry.Pair[[]byte, *list.Element]
 		var isQueueOpen bool
 
 		defer s.asyncKeyPtrChan.Close()
@@ -90,7 +90,7 @@ func (s *Segment) AddValue(val []byte) (lePtr *list.Element) {
 	return s.vlog.PushFront(val)
 }
 
-func (s *Segment) AddIndex(entry *common.Pair[[]byte, *list.Element]) {
+func (s *Segment) AddIndex(entry *entry.Pair[[]byte, *list.Element]) {
 	// For explicit serialization
 	delay := time.Duration(1)
 	for s.pendingUpdates.Load() > 0 {
@@ -102,12 +102,12 @@ func (s *Segment) AddIndex(entry *common.Pair[[]byte, *list.Element]) {
 	s.tree.Set(*entry)
 }
 
-func (s *Segment) AddIndexAsync(entry *common.Pair[[]byte, *list.Element]) {
+func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, *list.Element]) {
 	s.asyncKeyPtrChan.Write(entry)
 	s.pendingUpdates.Add(1)
 }
 
-func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
+func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	delay := time.Duration(1)
 	for s.pendingUpdates.Load() > 0 {
 		// Waiting time was generally between 10-250ms
@@ -118,23 +118,23 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []commo
 	snapshotTsNano := timestamp.ToUnit64(snapshotTs)
 
 	// 1. Do range scan
-	internalKey := common.KeyWithTs([]byte(startKey), timestamp.ToUnit64(snapshotTs))
-	startRow := common.Pair[[]byte, *list.Element]{Key: internalKey}
+	internalKey := entry.KeyWithTs([]byte(startKey), timestamp.ToUnit64(snapshotTs))
+	startRow := entry.Pair[[]byte, *list.Element]{Key: internalKey}
 	uniqueKVs := make(map[string][]byte)
 	seenKeys := make(map[string]any)
 
 	idx := 1
-	s.tree.Ascend(startRow, func(item common.Pair[[]byte, *list.Element]) bool {
+	s.tree.Ascend(startRow, func(item entry.Pair[[]byte, *list.Element]) bool {
 		if idx > count {
 			return false
 		}
 
 		// expiredTs < ItemTs < snapshotTs
-		itemTs := common.ParseTs(item.Key)
+		itemTs := entry.ParseTs(item.Key)
 		lessThanOrEqualToSnapshotTs := itemTs <= snapshotTsNano
 
 		if lessThanOrEqualToSnapshotTs {
-			strKey := string(common.ParseKey(item.Key))
+			strKey := string(entry.ParseKey(item.Key))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
 				if item.Val != nil && item.Val.Value.([]byte) != nil {
@@ -146,7 +146,7 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []commo
 		return true
 	})
 
-	return common.MapToArray(uniqueKVs)
+	return entry.MapToArray(uniqueKVs)
 }
 
 func (s *Segment) Free() int {

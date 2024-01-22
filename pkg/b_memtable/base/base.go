@@ -2,8 +2,8 @@ package base
 
 import (
 	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
+	"cometkv/pkg/y_internal/entry"
+	"cometkv/pkg/y_internal/timestamp"
 	"context"
 	"fmt"
 	movingaverage "github.com/RobinUS2/golang-moving-average"
@@ -73,7 +73,7 @@ func (e *EMBase) Prune(expiredTs uint64) int {
 	return delCount
 }
 func (e *EMBase) Put(key string, val []byte) { panic("not implemented") }
-func (e *EMBase) Scan(k string, c int, Ts time.Time) []common.Pair[string, []byte] {
+func (e *EMBase) Scan(k string, c int, Ts time.Time) []entry.Pair[string, []byte] {
 	panic("not implemented")
 }
 

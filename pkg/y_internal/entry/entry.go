@@ -1,4 +1,4 @@
-package common
+package entry
 
 type Pair[K any, V any] struct {
 	Key K
