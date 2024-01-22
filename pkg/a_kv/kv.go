@@ -2,7 +2,7 @@ package kv
 
 import (
 	"cometkv/pkg/b_memtable"
-	diskio "cometkv/pkg/c_diskio"
+	diskio "cometkv/pkg/c_sst_storage"
 	"cometkv/pkg/y_common"
 	"context"
 	"sync/atomic"
@@ -11,7 +11,7 @@ import (
 
 type CometKV struct {
 	memtable memtable.IMemtable
-	disk     diskio.IDiskIO
+	disk     diskio.SstStorage
 
 	localInsertCounter          atomic.Int64
 	globalLongRangeScanCount    atomic.Int64

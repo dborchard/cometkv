@@ -1,4 +1,4 @@
-package mbtree
+package mem_btree
 
 import (
 	common "cometkv/pkg/y_common"

@@ -3,6 +3,7 @@ package main
 import (
 	"cometkv/cmd/benchmark/generator"
 	"cometkv/cmd/benchmark/lotsaa"
+	kv "cometkv/pkg/a_kv"
 	memtable "cometkv/pkg/b_memtable"
 	"context"
 	"fmt"
@@ -71,13 +72,13 @@ func main() {
 
 }
 
-func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Duration, typ memtable.Type, keysSpace int64, scanWidth, scanThreadCount int, startLongRangeScan, variableWidth bool) {
+func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Duration, typ kv.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, startLongRangeScan, variableWidth bool) {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 1. Build MemTable
-	tree := memtable.New(typ, gcInterval, ttl, false, ctx)
+	tree := kv.NewCometKV(ctx, typ, nil)
 	tableName := tree.Name()
 
 	// 2.a Start Single Writer to the tree
