@@ -7,7 +7,7 @@ import (
 	kv "github.com/dborchard/cometkv/pkg/kv"
 	memtable "github.com/dborchard/cometkv/pkg/memtable"
 	sstio "github.com/dborchard/cometkv/pkg/sst_storage"
-	"github.com/dborchard/cometkv/pkg/y/generator"
+	"github.com/dborchard/cometkv/pkg/y/keygen"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -98,7 +98,7 @@ func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Durati
 
 func SingleWriter(keyRange int64, kvStore kv.KV, ctx context.Context) {
 	randSeq := rand.New(rand.NewSource(time.Now().UnixNano()))
-	keygen := generator.Build(generator.UNIFORM, 1, keyRange)
+	keygen := keygen.Build(keygen.UNIFORM, 1, keyRange)
 
 	val := make([]byte, 1024)
 	go func() {
@@ -123,8 +123,8 @@ func SingleWriter(keyRange int64, kvStore kv.KV, ctx context.Context) {
 func MultiReader(kvStore kv.KV, tableName string, keyRange int64, scanWidth, threadCount int, testDuration time.Duration, variableWidth bool) {
 	fmt.Print(tableName, "			")
 
-	keyGen := generator.Build(generator.UNIFORM, 1, keyRange)
-	scanWidthGen := generator.Build(generator.UNIFORM, 1, int64(scanWidth))
+	keyGen := keygen.Build(keygen.UNIFORM, 1, keyRange)
+	scanWidthGen := keygen.Build(keygen.UNIFORM, 1, int64(scanWidth))
 
 	lotsaa.Time(testDuration, threadCount, func(threadRand *rand.Rand, threadIdx int) {
 		// key length 16 --> cache padding improvement

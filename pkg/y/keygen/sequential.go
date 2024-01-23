@@ -28,7 +28,7 @@
  * LICENSE file.
  */
 
-package generator
+package keygen
 
 import (
 	"math/rand"
