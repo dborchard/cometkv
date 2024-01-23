@@ -2,6 +2,7 @@ package kv
 
 import (
 	"context"
+	"fmt"
 	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	diskio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
 	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
@@ -93,6 +94,8 @@ func (c *CometKV) atomicCasLocalInsertCounter() int64 {
 		currentValue := atomic.LoadInt64(&c.localInsertCounter)
 		if atomic.CompareAndSwapInt64(&c.localInsertCounter, currentValue, 0) {
 			return currentValue
+		} else {
+			fmt.Println("CAS failed. Retrying...")
 		}
 	}
 }
