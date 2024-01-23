@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	memtable "github.com/dborchard/cometkv/pkg/b_memtable"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"

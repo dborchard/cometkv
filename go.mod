@@ -1,4 +1,4 @@
-module github.com/arjunsk/cometkv
+module github.com/dborchard/cometkv
 
 go 1.21
 

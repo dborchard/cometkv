@@ -2,7 +2,7 @@ package memtable
 
 import (
 	"context"
-	common "github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	common "github.com/dborchard/cometkv/pkg/y_internal/entry"
 	"time"
 )
 

@@ -1,7 +1,7 @@
 package mor_btree
 
 import (
-	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/dborchard/cometkv/pkg/y_internal/entry"
 	"github.com/tidwall/btree"
 )
 

@@ -2,8 +2,8 @@ package mor_btree
 
 import (
 	"context"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
-	"github.com/arjunsk/cometkv/pkg/z_tests"
+	memtable "github.com/dborchard/cometkv/pkg/b_memtable"
+	"github.com/dborchard/cometkv/pkg/z_tests"
 	"testing"
 	"time"
 )

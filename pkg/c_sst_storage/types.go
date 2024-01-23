@@ -1,8 +1,8 @@
 package sstio
 
 import (
-	"github.com/arjunsk/cometkv/pkg/c_sst_storage/mem_btree"
-	common "github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/dborchard/cometkv/pkg/c_sst_storage/mem_btree"
+	common "github.com/dborchard/cometkv/pkg/y_internal/entry"
 	"time"
 )
 

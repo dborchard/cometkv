@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
-	kv "github.com/arjunsk/cometkv/pkg/a_kv"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
-	sstio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
 	lotsaa "github.com/arjunsk/lotsaa"
+	kv "github.com/dborchard/cometkv/pkg/a_kv"
+	memtable "github.com/dborchard/cometkv/pkg/b_memtable"
+	sstio "github.com/dborchard/cometkv/pkg/c_sst_storage"
+	"github.com/dborchard/cometkv/pkg/y_internal/generator"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"runtime"
 
 	//_ "net/http/pprof"
@@ -144,4 +146,21 @@ func MultiReader(kvStore kv.KV, tableName string, keyRange int64, scanWidth, thr
 
 func startGc() {
 	runtime.GC()
+}
+
+func PrintIP() {
+	resp, err := http.Get("https://icanhazip.com/")
+	if err != nil {
+		fmt.Println("Error fetching public IP:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	ip, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response body:", err)
+		return
+	}
+
+	fmt.Println("EC2 Instance Public IP:", string(ip))
 }
