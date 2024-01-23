@@ -1,9 +1,7 @@
 package hwt_cow
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/z_tests"
-	"context"
+	"github.com/arjunsk/cometkv/pkg/z_tests"
 	"testing"
 	"time"
 )

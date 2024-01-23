@@ -1,7 +1,7 @@
 package mor_cow
 
 import (
-	"cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"github.com/tidwall/btree"
 )
 

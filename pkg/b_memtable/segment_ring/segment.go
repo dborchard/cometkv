@@ -1,11 +1,11 @@
 package segment_ring
 
 import (
-	"cometkv/pkg/y_internal/entry"
-	"cometkv/pkg/y_internal/timestamp"
 	"container/list"
 	"context"
 	"github.com/alphadose/zenq/v2"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"runtime"
 	"sync/atomic"
 	"time"

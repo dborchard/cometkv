@@ -1,8 +1,8 @@
 package main
 
 import (
-	"cometkv/cmd/benchmark/generator"
 	"fmt"
+	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
 	"math/rand"
 	"time"
 )

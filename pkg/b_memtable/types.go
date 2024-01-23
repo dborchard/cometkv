@@ -1,8 +1,8 @@
 package memtable
 
 import (
-	common "cometkv/pkg/y_internal/entry"
 	"context"
+	common "github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"time"
 )
 

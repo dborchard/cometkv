@@ -1,8 +1,6 @@
 package hwt_btree
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/z_tests"
 	"context"
 	"testing"
 	"time"

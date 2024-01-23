@@ -1,16 +1,16 @@
 package kv
 
 import (
-	memtable "cometkv/pkg/b_memtable"
-	"cometkv/pkg/b_memtable/hwt_btree"
-	"cometkv/pkg/b_memtable/hwt_cow"
-	"cometkv/pkg/b_memtable/mor_btree"
-	"cometkv/pkg/b_memtable/mor_cow"
-	"cometkv/pkg/b_memtable/segment_ring"
-	"cometkv/pkg/b_memtable/vacuum_btree"
-	"cometkv/pkg/b_memtable/vacuum_cow"
-	"cometkv/pkg/b_memtable/vacuum_skiplist"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/hwt_btree"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/hwt_cow"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/mor_btree"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/mor_cow"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/segment_ring"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/vacuum_btree"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/vacuum_cow"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/vacuum_skiplist"
 	"time"
 )
 

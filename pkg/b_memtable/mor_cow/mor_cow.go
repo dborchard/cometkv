@@ -1,12 +1,12 @@
 package mor_cow
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/b_memtable/base"
-	"cometkv/pkg/y_internal/entry"
-	"cometkv/pkg/y_internal/timestamp"
 	"container/heap"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"github.com/tidwall/btree"
 	"math"
 	"time"

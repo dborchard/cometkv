@@ -1,7 +1,7 @@
 package kv
 
 import (
-	"cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"time"
 )
 

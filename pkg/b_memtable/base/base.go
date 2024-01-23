@@ -1,12 +1,12 @@
 package base
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/y_internal/entry"
-	"cometkv/pkg/y_internal/timestamp"
 	"context"
 	"fmt"
 	movingaverage "github.com/RobinUS2/golang-moving-average"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"runtime"
 	"time"
 )

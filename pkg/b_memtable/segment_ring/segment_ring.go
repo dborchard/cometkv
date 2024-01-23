@@ -1,12 +1,12 @@
 package segment_ring
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/b_memtable/base"
-	"cometkv/pkg/y_internal/entry"
-	"cometkv/pkg/y_internal/timestamp"
 	"container/list"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"math"
 	"time"
 )

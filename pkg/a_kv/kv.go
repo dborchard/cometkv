@@ -1,10 +1,10 @@
 package kv
 
 import (
-	"cometkv/pkg/b_memtable"
-	diskio "cometkv/pkg/c_sst_storage"
-	"cometkv/pkg/y_internal/entry"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	diskio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"sync/atomic"
 	"time"
 )

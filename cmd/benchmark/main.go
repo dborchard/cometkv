@@ -1,12 +1,12 @@
 package main
 
 import (
-	"cometkv/cmd/benchmark/generator"
-	"cometkv/cmd/benchmark/lotsaa"
-	kv "cometkv/pkg/a_kv"
-	sstio "cometkv/pkg/c_sst_storage"
 	"context"
 	"fmt"
+	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
+	"github.com/arjunsk/cometkv/cmd/benchmark/lotsaa"
+	kv "github.com/arjunsk/cometkv/pkg/a_kv"
+	sstio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
 	"io/ioutil"
 	"math/rand"
 	"net/http"

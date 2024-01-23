@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"cometkv/pkg/b_memtable"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"

@@ -1,13 +1,11 @@
 package segment_ring
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/y_internal/entry"
-	"cometkv/pkg/y_internal/timestamp"
-	"cometkv/pkg/z_tests"
 	"container/list"
 	"context"
 	"github.com/alphadose/zenq/v2"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"github.com/panjf2000/ants/v2"
 	"github.com/tidwall/btree"
 	"sync"
