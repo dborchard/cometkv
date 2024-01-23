@@ -14,6 +14,7 @@ type KV interface {
 	Close()
 
 	MemTableName() string
+	SstStorageName() string
 }
 
 var _ KV = new(CometKV)

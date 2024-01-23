@@ -88,10 +88,6 @@ func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Cont
 	}()
 }
 
-func (c *CometKV) MemTableName() string {
-	return c.mem.Name()
-}
-
 func (c *CometKV) atomicCasLocalInsertCounter() int64 {
 	for {
 		currentValue := atomic.LoadInt64(&c.localInsertCounter)
@@ -99,4 +95,11 @@ func (c *CometKV) atomicCasLocalInsertCounter() int64 {
 			return currentValue
 		}
 	}
+}
+
+func (c *CometKV) MemTableName() string {
+	return c.mem.Name()
+}
+func (c *CometKV) SstStorageName() string {
+	return c.disk.Name()
 }

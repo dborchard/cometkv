@@ -106,3 +106,7 @@ func (io *IO) Destroy() {
 	io.files = nil
 	io.Unlock()
 }
+
+func (io *IO) Name() string {
+	return "mem_btree"
+}

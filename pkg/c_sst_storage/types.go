@@ -11,6 +11,8 @@ type SstIO interface {
 	Get(key string, snapshotTs time.Time) []byte
 	Create(records []common.Pair[string, []byte]) error
 	Destroy()
+
+	Name() string
 }
 
 var _ SstIO = new(mem_btree.IO)
