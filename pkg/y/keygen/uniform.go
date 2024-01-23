@@ -28,19 +28,30 @@
  * LICENSE file.
  */
 
-package generator
+package keygen
 
-// Number is a common generator.
-type Number struct {
-	LastValue int64
+import "math/rand"
+
+// Uniform generates integers randomly.
+type Uniform struct {
+	Number
+	lb       int64
+	ub       int64
+	interval int64
 }
 
-// SetLastValue sets the last value generated.
-func (n *Number) SetLastValue(value int64) {
-	n.LastValue = value
+// NewUniform creates the Uniform generator.
+func NewUniform(lb int64, ub int64) *Uniform {
+	return &Uniform{
+		lb:       lb,
+		ub:       ub,
+		interval: ub - lb + 1,
+	}
 }
 
-// Last implements the Generator Last interface.
-func (n *Number) Last() int64 {
-	return n.LastValue
+// Next implements the Generator Next interface.
+func (u *Uniform) Next(r *rand.Rand) int64 {
+	n := r.Int63n(u.interval) + u.lb
+	u.SetLastValue(n)
+	return n
 }

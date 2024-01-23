@@ -1,4 +1,4 @@
-package generator
+package keygen
 
 type Distribution int
 
