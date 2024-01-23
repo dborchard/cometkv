@@ -41,15 +41,14 @@ func main() {
 	lotsaa.Output = os.Stdout
 	//lotsaa.MemUsage = true
 
-	keysSpace := int64(10_000_000)       // 10M
-	scanWidth := 1000                    // 1, 100, 1000
-	ttl := 3 * time.Minute               // 3min
-	testDuration := 10 * time.Minute     // 10min, 11min, 12min
-	scanThreadCount := 16                // 16, 32, 64, 128, 254
-	gcInterval := 30 * time.Second       // 5sec, 30sec, 1m
-	startLongRangeScan := true           // true
-	longRangeDuration := 1 * time.Minute // 1min
-	variableWidth := true                //true or false
+	keysSpace := int64(10_000_000)   // 10M
+	scanWidth := 1000                // 1, 100, 1000
+	ttl := 3 * time.Minute           // 3min
+	testDuration := 10 * time.Minute // 10min, 11min, 12min
+	scanThreadCount := 16            // 16, 32, 64, 128, 254
+	gcInterval := 30 * time.Second   // 5sec, 30sec, 1m
+	flushInterval := 1 * time.Minute // 1min
+	variableWidth := true            //true or false
 
 	PrintIP()
 	fmt.Printf("** New Run %s ** \n", time.Now().Format("2006_01_02_15_04_05"))
@@ -57,15 +56,15 @@ func main() {
 
 	fmt.Printf("GC used %s @ time %s \n", gcInterval, time.Now().Format("2006_01_02_15_04_05"))
 	for tc := scanThreadCount; tc <= 1024; tc = tc * 2 {
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.SegmentRing, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumCoW, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.HWTCoWBTree, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.MoRCoWBTree, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.SegmentRing, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.VacuumCoW, keysSpace, scanWidth, tc, variableWidth)
 
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumSkipList, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.MoRBTree, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.HWTBTree, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.VacuumBTree, keysSpace, scanWidth, tc, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.VacuumSkipList, keysSpace, scanWidth, tc, variableWidth)
 
 		fmt.Printf("Batch Completed %s \n", time.Now().Format("2006_01_02_15_04_05"))
 		fmt.Println("----------------------------------------------------------------------------------------------")
@@ -73,14 +72,14 @@ func main() {
 
 }
 
-func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Duration, typ memtable.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, startLongRangeScan, variableWidth bool) {
+func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Duration, typ memtable.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, variableWidth bool) {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 1. Build MemTable
-	tree := kv.NewCometKV(ctx, typ, sstio.MBtree, gcInterval, ttl)
-	tableName := tree.Name()
+	tree := kv.NewCometKV(ctx, typ, sstio.MBtree, gcInterval, ttl, flushInterval)
+	tableName := tree.MemTableName()
 
 	// 2.a Start Single Writer to the tree
 	SingleWriter(keysSpace, tree, ctx)

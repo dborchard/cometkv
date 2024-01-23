@@ -13,7 +13,7 @@ type KV interface {
 	Delete(key string)
 	Close()
 
-	Name() string
+	MemTableName() string
 }
 
 var _ KV = new(CometKV)
