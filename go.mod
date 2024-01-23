@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/arjunsk/lotsaa v0.0.0-20230417155829-2e99051691f6 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect

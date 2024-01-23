@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
-	"github.com/arjunsk/cometkv/cmd/benchmark/lotsaa"
 	kv "github.com/arjunsk/cometkv/pkg/a_kv"
 	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	sstio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
+	lotsaa "github.com/arjunsk/lotsaa"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -95,7 +95,7 @@ func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Durati
 	globalLongRangeScanDuration = time.Duration(0)
 
 	// 4. Multi Reader
-	MultiReader(tree, tableName, keysSpace, scanWidth, scanThreadCount, testDuration, gcInterval, variableWidth)
+	MultiReader(tree, tableName, keysSpace, scanWidth, scanThreadCount, testDuration, variableWidth)
 	cancel()
 	time.Sleep(5 * time.Second)
 	tree.Close()
@@ -139,13 +139,13 @@ func SingleWriter(keySpace int64, tree kv.KV, ctx context.Context) {
 	}()
 }
 
-func MultiReader(tree kv.KV, tableName string, keySpace int64, scanWidth, threadCount int, testDuration, gcInterval time.Duration, variableWidth bool) {
+func MultiReader(tree kv.KV, tableName string, keySpace int64, scanWidth, threadCount int, testDuration time.Duration, variableWidth bool) {
 	fmt.Print(tableName, "			")
 
 	keyGen := generator.Build(generator.UNIFORM, 1, keySpace)
 	scanWidthGen := generator.Build(generator.UNIFORM, 1, int64(scanWidth))
 
-	lotsaa.Ops(testDuration, threadCount,
+	lotsaa.Time(testDuration, threadCount,
 		func(threadRand *rand.Rand, threadIdx int) {
 			// key length 16 --> cache padding improvement
 			key := fmt.Sprintf("%16d", keyGen.Next(threadRand))
