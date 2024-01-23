@@ -3,7 +3,6 @@ package hwt_btree
 import (
 	"context"
 	"github.com/RussellLuo/timingwheel"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
 	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"

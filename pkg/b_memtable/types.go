@@ -20,3 +20,16 @@ type IMemtable interface {
 
 	Name() string
 }
+
+type MemtableTyp int
+
+const (
+	SegmentRing MemtableTyp = iota
+	VacuumSkipList
+	VacuumBTree
+	VacuumCoW
+	MoRBTree
+	MoRCoWBTree
+	HWTBTree
+	HWTCoWBTree
+)

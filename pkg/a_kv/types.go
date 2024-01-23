@@ -17,16 +17,3 @@ type KV interface {
 }
 
 var _ KV = new(CometKV)
-
-type MemtableTyp int
-
-const (
-	SegmentRing MemtableTyp = iota
-	VacuumSkipList
-	VacuumBTree
-	VacuumCoW
-	MoRBTree
-	MoRCoWBTree
-	HWTBTree
-	HWTCoWBTree
-)

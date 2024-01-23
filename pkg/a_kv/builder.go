@@ -2,7 +2,6 @@ package kv
 
 import (
 	"context"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/hwt_btree"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/hwt_cow"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/mor_btree"
@@ -14,31 +13,31 @@ import (
 	"time"
 )
 
-func NewMemtable(typ MemtableTyp, gcInterval, ttl time.Duration, logStats bool, ctx context.Context) (tree memtable.IMemtable) {
+func NewMemtable(typ memtable.MemtableTyp, gcInterval, ttl time.Duration, logStats bool, ctx context.Context) (tree memtable.IMemtable) {
 
 	switch typ {
-	case SegmentRing:
+	case memtable.SegmentRing:
 		tree = segment_ring.New(gcInterval, ttl, logStats, ctx)
 
-	case VacuumSkipList:
+	case memtable.VacuumSkipList:
 		tree = vacuum_skiplist.New(gcInterval, ttl, logStats, ctx)
 
-	case VacuumBTree:
+	case memtable.VacuumBTree:
 		tree = vacuum_btree.New(gcInterval, ttl, logStats, ctx)
 
-	case VacuumCoW:
+	case memtable.VacuumCoW:
 		tree = vacuum_cow.New(gcInterval, ttl, logStats, ctx)
 
-	case MoRBTree:
+	case memtable.MoRBTree:
 		tree = mor_btree.New(gcInterval, ttl, logStats, ctx)
 
-	case MoRCoWBTree:
+	case memtable.MoRCoWBTree:
 		tree = mor_cow.New(gcInterval, ttl, logStats, ctx)
 
-	case HWTBTree:
+	case memtable.HWTBTree:
 		tree = hwt_btree.New(gcInterval, ttl, logStats, ctx)
 
-	case HWTCoWBTree:
+	case memtable.HWTCoWBTree:
 		tree = hwt_cow.New(gcInterval, ttl, logStats, ctx)
 
 	default:

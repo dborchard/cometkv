@@ -56,15 +56,15 @@ func main() {
 
 	fmt.Printf("GC used %s @ time %s \n", gcInterval, time.Now().Format("2006_01_02_15_04_05"))
 	for tc := scanThreadCount; tc <= 1024; tc = tc * 2 {
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.HWTCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.MoRCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.SegmentRing, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumCoW, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRCoWBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.SegmentRing, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumCoW, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
 
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.MoRBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.HWTBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
-		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, kv.VacuumSkipList, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.MoRBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.HWTBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumBTree, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
+		RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration, memtable.VacuumSkipList, keysSpace, scanWidth, tc, startLongRangeScan, variableWidth)
 
 		fmt.Printf("Batch Completed %s \n", time.Now().Format("2006_01_02_15_04_05"))
 		fmt.Println("----------------------------------------------------------------------------------------------")
@@ -72,13 +72,13 @@ func main() {
 
 }
 
-func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Duration, typ kv.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, startLongRangeScan, variableWidth bool) {
+func RangeScanBenchTest(gcInterval, ttl, longRangeDuration, testDuration time.Duration, typ memtable.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, startLongRangeScan, variableWidth bool) {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 1. Build MemTable
-	tree := kv.NewCometKV(ctx, typ, sstio.MBtree, ttl, longRangeDuration)
+	tree := kv.NewCometKV(ctx, typ, sstio.MBtree, gcInterval, ttl)
 	tableName := tree.Name()
 
 	// 2.a Start Single Writer to the tree

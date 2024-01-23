@@ -2,7 +2,6 @@ package kv
 
 import (
 	"context"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	diskio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
 	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"sync/atomic"
@@ -18,9 +17,9 @@ type CometKV struct {
 	globalLongRangeScanDuration time.Duration
 }
 
-func NewCometKV(ctx context.Context, mTyp MemtableTyp, dTyp diskio.Type, ttl, longRangeDuration time.Duration) KV {
+func NewCometKV(ctx context.Context, mTyp memtable.MemtableTyp, dTyp diskio.Type, gcInterval, ttl time.Duration) KV {
 	kv := CometKV{
-		mem:  NewMemtable(mTyp, longRangeDuration, ttl, true, ctx),
+		mem:  NewMemtable(mTyp, gcInterval, ttl, true, ctx),
 		disk: diskio.New(dTyp),
 
 		localInsertCounter:          atomic.Int64{},
