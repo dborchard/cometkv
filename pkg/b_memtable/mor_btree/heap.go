@@ -1,11 +1,11 @@
 package mor_btree
 
 import (
-	"cometkv/pkg/y_common"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"github.com/tidwall/btree"
 )
 
-type MinHeap []*btree.IterG[common.Pair[[]byte, []byte]]
+type MinHeap []*btree.IterG[entry.Pair[[]byte, []byte]]
 
 func (m MinHeap) Len() int { return len(m) }
 func (m MinHeap) Less(i, j int) bool {
@@ -15,12 +15,12 @@ func (m MinHeap) Less(i, j int) bool {
 	if m[j].Item().Key == nil || len(m[j].Item().Key) == 0 {
 		return false
 	}
-	return common.CompareKeys(m[i].Item().Key, m[j].Item().Key) < 0
+	return entry.CompareKeys(m[i].Item().Key, m[j].Item().Key) < 0
 }
 func (m MinHeap) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
 
 func (m *MinHeap) Push(x interface{}) {
-	*m = append(*m, x.(*btree.IterG[common.Pair[[]byte, []byte]]))
+	*m = append(*m, x.(*btree.IterG[entry.Pair[[]byte, []byte]]))
 }
 
 func (m *MinHeap) Pop() interface{} {

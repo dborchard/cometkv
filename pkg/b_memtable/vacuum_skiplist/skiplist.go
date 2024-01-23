@@ -1,16 +1,17 @@
 package vacuum_skiplist
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/b_memtable/vacuum_skiplist/sl"
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/vacuum_skiplist/sl"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"time"
 )
 
 type EphemeralMemtable struct {
-	base *memtable.EMBase
+	base *base.EMBase
 	list sl.SkipList[[]byte, []byte]
 }
 
@@ -18,10 +19,10 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 
 	tbl := EphemeralMemtable{}
 	tbl.list = sl.New[[]byte, []byte](func(lhs, rhs []byte) int {
-		return common.CompareKeys(lhs, rhs)
+		return entry.CompareKeys(lhs, rhs)
 	}, sl.WithMutex())
 
-	tbl.base = memtable.NewBase(&tbl, gcInterval, ttl, logStats)
+	tbl.base = base.NewBase(&tbl, gcInterval, ttl, logStats)
 	go tbl.StartGc(gcInterval, ctx)
 
 	return &tbl
@@ -32,20 +33,20 @@ func (e *EphemeralMemtable) Name() string {
 }
 
 func (e *EphemeralMemtable) Put(key string, val []byte) {
-	internalKey := common.KeyWithTs([]byte(key), timestamp.Now())
+	internalKey := entry.KeyWithTs([]byte(key), timestamp.Now())
 	e.list.Set(internalKey, val)
 }
 
-func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
+func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	//0. Check if snapshotTs has already expired
 	if !timestamp.IsValidTs(snapshotTs, e.base.TTL) {
-		return []common.Pair[string, []byte]{}
+		return []entry.Pair[string, []byte]{}
 	}
 
 	snapshotTsNano := timestamp.ToUnit64(snapshotTs)
 
 	// 1. Do range scan 	{startKey, snapshotTs} <= item <= {endKey, snapshotTs}
-	internalKey := common.KeyWithTs([]byte(startKey), snapshotTsNano)
+	internalKey := entry.KeyWithTs([]byte(startKey), snapshotTsNano)
 	uniqueKVs := make(map[string][]byte)
 	seenKeys := make(map[string]any)
 	idx := 1
@@ -56,12 +57,12 @@ func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Tim
 		}
 
 		// expiredTs < ItemTs < snapshotTs
-		itemTs := common.ParseTs(item.Key())
+		itemTs := entry.ParseTs(item.Key())
 		lessThanOrEqualToSnapshotTs := itemTs <= snapshotTsNano
 		greaterThanExpiredTs := timestamp.IsValidTsUint(itemTs, e.base.TTL)
 
 		if lessThanOrEqualToSnapshotTs && greaterThanExpiredTs {
-			strKey := string(common.ParseKey(item.Key()))
+			strKey := string(entry.ParseKey(item.Key()))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
 				if item.Value != nil {
@@ -75,7 +76,7 @@ func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Tim
 	})
 
 	// 2. Sorted key set
-	return common.MapToArray(uniqueKVs)
+	return entry.MapToArray(uniqueKVs)
 }
 
 func (e *EphemeralMemtable) Prune(expiredTs uint64) int {
@@ -84,7 +85,7 @@ func (e *EphemeralMemtable) Prune(expiredTs uint64) int {
 	deleteCount := 0
 
 	for _, key := range keysCopy {
-		if common.ParseTs(key) <= expiredTs {
+		if entry.ParseTs(key) <= expiredTs {
 			e.list.Remove(key)
 			deleteCount++
 		}

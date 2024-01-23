@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"cometkv/pkg/b_memtable"
 	"fmt"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"

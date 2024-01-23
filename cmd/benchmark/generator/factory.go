@@ -9,15 +9,15 @@ const (
 
 func Build(dist Distribution, start int64, count int64) Generator {
 
-	var keyrangeLowerBound = start
-	var keyrangeUpperBound = start + count - 1
+	var keyRangeLowerBound = start
+	var keyRangeUpperBound = start + count - 1
 
 	var keygen Generator
 	switch dist {
 	case UNIFORM:
-		keygen = NewUniform(keyrangeLowerBound, keyrangeUpperBound)
+		keygen = NewUniform(keyRangeLowerBound, keyRangeUpperBound)
 	case SEQUENTIAL:
-		keygen = NewSequential(keyrangeLowerBound, keyrangeUpperBound)
+		keygen = NewSequential(keyRangeLowerBound, keyRangeUpperBound)
 	default:
 		panic("Unknown distribution")
 	}

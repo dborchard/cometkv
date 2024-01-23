@@ -1,68 +1,70 @@
 package kv
 
 import (
-	"cometkv/pkg/b_memtable"
-	diskio "cometkv/pkg/c_diskio"
-	"cometkv/pkg/y_common"
 	"context"
+	"fmt"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	diskio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
 	"sync/atomic"
 	"time"
 )
 
 type CometKV struct {
-	memtable memtable.IMemtable
-	disk     diskio.IDiskIO
+	mem  memtable.IMemtable
+	disk diskio.SstIO
 
-	localInsertCounter          atomic.Int64
+	localInsertCounter          int64
 	globalLongRangeScanCount    atomic.Int64
 	globalLongRangeScanDuration time.Duration
 }
 
-func NewCometKV(ctx context.Context, mTyp memtable.Type, dTyp diskio.Type) *CometKV {
+func NewCometKV(ctx context.Context, mTyp memtable.Typ, dTyp diskio.Type, gcInterval, ttl, flushInterval time.Duration) KV {
 	kv := CometKV{
-		memtable: memtable.New(mTyp, 10, 10, true, ctx),
-		disk:     diskio.New(dTyp),
+		mem:  NewMemtable(mTyp, gcInterval, ttl, true, ctx),
+		disk: diskio.New(dTyp),
 
-		localInsertCounter:          atomic.Int64{},
+		localInsertCounter:          0,
 		globalLongRangeScanCount:    atomic.Int64{},
 		globalLongRangeScanDuration: time.Duration(0),
 	}
-	kv.startFlushThread(10*time.Second, true, ctx)
+	kv.startFlushThread(flushInterval, ctx)
 	return &kv
 }
 func (c *CometKV) Put(key string, val []byte) {
-	c.memtable.Put(key, val)
-	c.localInsertCounter.Add(1)
+	c.mem.Put(key, val)
+	c.localInsertCounter++
 }
 
-func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
-	res := c.memtable.Scan(startKey, count, snapshotTs)
-	if len(res) < count {
-		res = append(res, c.disk.Scan(startKey, count-len(res), snapshotTs)...)
+func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
+	res := c.mem.Scan(startKey, count, snapshotTs)
+	diff := count - len(res)
+	if diff > 0 {
+		res = append(res, c.disk.Scan(startKey, diff, snapshotTs)...)
 	}
 	return res
 }
 
 func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
-	res := c.memtable.Get(key, snapshotTs)
-	if res == nil {
+	res := c.mem.Get(key, snapshotTs)
+	if len(res) == 0 {
 		res = c.disk.Get(key, snapshotTs)
 	}
 	return res
 }
 
 func (c *CometKV) Delete(key string) {
-	c.memtable.Delete(key)
+	c.mem.Delete(key)
 }
 
 func (c *CometKV) Close() {
-	c.memtable.Close()
+	c.mem.Close()
 	c.disk.Destroy()
 }
 
-func (c *CometKV) startFlushThread(longRangeDuration time.Duration, startLongRangeScan bool, ctx context.Context) {
+func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Context) {
 	go func() {
-		ticker := time.NewTicker(longRangeDuration)
+		ticker := time.NewTicker(flushInterval)
 		defer ticker.Stop()
 
 		for {
@@ -70,22 +72,37 @@ func (c *CometKV) startFlushThread(longRangeDuration time.Duration, startLongRan
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				if startLongRangeScan {
-					totalInsertsForLongRangeDuration := c.localInsertCounter.Load()
-					c.localInsertCounter.Store(0)
+				totalInsertsForLongRangeDuration := c.atomicCasLocalInsertCounter()
 
-					startTs := time.Now()
+				startTs := time.Now()
 
-					records := c.memtable.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
-					_ = c.disk.Create(records)
+				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
+				_ = c.disk.Create(records)
 
-					endTs := time.Now()
-					diff := endTs.Sub(startTs)
+				endTs := time.Now()
+				diff := endTs.Sub(startTs)
 
-					c.globalLongRangeScanCount.Add(int64(len(records)))
-					c.globalLongRangeScanDuration += diff
-				}
+				c.globalLongRangeScanCount.Add(int64(len(records)))
+				c.globalLongRangeScanDuration += diff
 			}
 		}
 	}()
+}
+
+func (c *CometKV) atomicCasLocalInsertCounter() int64 {
+	for {
+		currentValue := atomic.LoadInt64(&c.localInsertCounter)
+		if atomic.CompareAndSwapInt64(&c.localInsertCounter, currentValue, 0) {
+			return currentValue
+		} else {
+			fmt.Println("CAS failed. Retrying...")
+		}
+	}
+}
+
+func (c *CometKV) MemTableName() string {
+	return c.mem.Name()
+}
+func (c *CometKV) SstStorageName() string {
+	return c.disk.Name()
 }

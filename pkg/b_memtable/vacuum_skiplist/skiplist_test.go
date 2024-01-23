@@ -1,9 +1,9 @@
 package vacuum_skiplist
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/z_tests"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	tests "github.com/arjunsk/cometkv/pkg/z_tests"
 	"testing"
 	"time"
 )

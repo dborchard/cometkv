@@ -1,6 +1,8 @@
-package common
+package entry
 
-import "sort"
+import (
+	"sort"
+)
 
 func MapToArray(uniqueKVs map[string][]byte) []Pair[string, []byte] {
 	// 2. Sorted key set

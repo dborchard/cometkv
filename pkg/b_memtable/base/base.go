@@ -1,23 +1,24 @@
-package memtable
+package base
 
 import (
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
 	"context"
 	"fmt"
 	movingaverage "github.com/RobinUS2/golang-moving-average"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"runtime"
 	"time"
 )
 
 type EMBase struct {
 	TTL      time.Duration
-	derived  IMemtable
+	derived  memtable.IMemtable
 	moAvg    *movingaverage.MovingAverage
 	logStats bool
 }
 
-func NewBase(bt IMemtable, gc, ttl time.Duration, logStats bool) *EMBase {
+func NewBase(bt memtable.IMemtable, gc, ttl time.Duration, logStats bool) *EMBase {
 	return &EMBase{
 		derived:  bt,
 		TTL:      ttl,
@@ -72,7 +73,7 @@ func (e *EMBase) Prune(expiredTs uint64) int {
 	return delCount
 }
 func (e *EMBase) Put(key string, val []byte) { panic("not implemented") }
-func (e *EMBase) Scan(k string, c int, Ts time.Time) []common.Pair[string, []byte] {
+func (e *EMBase) Scan(k string, c int, Ts time.Time) []entry.Pair[string, []byte] {
 	panic("not implemented")
 }
 

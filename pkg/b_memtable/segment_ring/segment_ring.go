@@ -1,18 +1,19 @@
 package segment_ring
 
 import (
-	"cometkv/pkg/b_memtable"
-	"cometkv/pkg/y_common"
-	"cometkv/pkg/y_common/timestamp"
 	"container/list"
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
+	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
 	"math"
 	"time"
 )
 
 // SegmentRing Ephemeral Copy-Ahead MV Tree
 type SegmentRing struct {
-	base *memtable.EMBase
+	base *base.EMBase
 
 	segments []*Segment
 
@@ -35,7 +36,7 @@ func New(gcInterval, ttl time.Duration, logStats bool, ctx context.Context) memt
 	sr.cycleDuration = int64(time.Duration(float64(totalSegments) * float64(gcInterval)).Seconds())
 	sr.init(totalSegments, ctx)
 
-	sr.base = memtable.NewBase(&sr, gcInterval, ttl, logStats)
+	sr.base = base.NewBase(&sr, gcInterval, ttl, logStats)
 	go sr.StartGc(gcInterval, ctx)
 
 	return &sr
@@ -74,8 +75,8 @@ func (s *SegmentRing) Put(key string, val []byte) {
 	rPtr := s.segments[activeSegmentIdx].AddValue(val)
 
 	// 3. Create entry for "Index"
-	internalKey := common.KeyWithTs([]byte(key), timestamp.ToUnit64(currTs))
-	entry := &common.Pair[[]byte, *list.Element]{Key: internalKey, Val: rPtr}
+	internalKey := entry.KeyWithTs([]byte(key), timestamp.ToUnit64(currTs))
+	entry := &entry.Pair[[]byte, *list.Element]{Key: internalKey, Val: rPtr}
 
 	// 4.a Add to Curr segment in sync.
 	head := s.segments[activeSegmentIdx]
@@ -90,10 +91,10 @@ func (s *SegmentRing) Put(key string, val []byte) {
 	}
 }
 
-func (s *SegmentRing) Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte] {
+func (s *SegmentRing) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	//0. Check if snapshotTs has already expired
 	if !timestamp.IsValidTs(snapshotTs, s.base.TTL) {
-		return []common.Pair[string, []byte]{}
+		return []entry.Pair[string, []byte]{}
 	}
 
 	//1. Get Segment
