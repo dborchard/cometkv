@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
+	"github.com/dborchard/cometkv/pkg/y_internal/generator"
 	"math/rand"
 	"time"
 )

@@ -1,7 +1,7 @@
 package mem_btree
 
 import (
-	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	"github.com/dborchard/cometkv/pkg/y_internal/entry"
 )
 import "github.com/tidwall/btree"
 

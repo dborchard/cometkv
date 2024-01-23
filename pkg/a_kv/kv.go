@@ -3,9 +3,9 @@ package kv
 import (
 	"context"
 	"fmt"
-	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
-	diskio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
-	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
+	memtable "github.com/dborchard/cometkv/pkg/b_memtable"
+	diskio "github.com/dborchard/cometkv/pkg/c_sst_storage"
+	"github.com/dborchard/cometkv/pkg/y_internal/entry"
 	"sync/atomic"
 	"time"
 )

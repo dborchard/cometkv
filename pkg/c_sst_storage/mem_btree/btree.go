@@ -2,8 +2,8 @@ package mem_btree
 
 import (
 	"container/heap"
-	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
-	"github.com/arjunsk/cometkv/pkg/y_internal/timestamp"
+	"github.com/dborchard/cometkv/pkg/y_internal/entry"
+	"github.com/dborchard/cometkv/pkg/y_internal/timestamp"
 	"github.com/tidwall/btree"
 	"sync"
 	"time"
