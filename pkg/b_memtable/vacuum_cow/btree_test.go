@@ -2,6 +2,8 @@ package vacuum_cow
 
 import (
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
+	tests "github.com/arjunsk/cometkv/pkg/z_tests"
 	"testing"
 	"time"
 )
