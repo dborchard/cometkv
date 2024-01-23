@@ -18,7 +18,7 @@ type CometKV struct {
 	globalLongRangeScanDuration time.Duration
 }
 
-func NewCometKV(ctx context.Context, mTyp memtable.MemtableTyp, dTyp diskio.Type, gcInterval, ttl, flushInterval time.Duration) KV {
+func NewCometKV(ctx context.Context, mTyp memtable.Typ, dTyp diskio.Type, gcInterval, ttl, flushInterval time.Duration) KV {
 	kv := CometKV{
 		mem:  NewMemtable(mTyp, gcInterval, ttl, true, ctx),
 		disk: diskio.New(dTyp),

@@ -21,10 +21,10 @@ type IMemtable interface {
 	Name() string
 }
 
-type MemtableTyp int
+type Typ int
 
 const (
-	SegmentRing MemtableTyp = iota
+	SegmentRing Typ = iota
 	VacuumSkipList
 	VacuumBTree
 	VacuumCoW

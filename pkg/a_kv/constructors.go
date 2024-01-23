@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func NewMemtable(typ memtable.MemtableTyp, gcInterval, ttl time.Duration, logStats bool, ctx context.Context) (tree memtable.IMemtable) {
+func NewMemtable(typ memtable.Typ, gcInterval, ttl time.Duration, logStats bool, ctx context.Context) (tree memtable.IMemtable) {
 
 	switch typ {
 	case memtable.SegmentRing:

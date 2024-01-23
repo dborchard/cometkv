@@ -72,7 +72,7 @@ func main() {
 
 }
 
-func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Duration, typ memtable.MemtableTyp, keysSpace int64, scanWidth, scanThreadCount int, variableWidth bool) {
+func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Duration, typ memtable.Typ, keysSpace int64, scanWidth, scanThreadCount int, variableWidth bool) {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
