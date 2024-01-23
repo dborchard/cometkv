@@ -6,6 +6,7 @@ import (
 	"github.com/arjunsk/cometkv/cmd/benchmark/generator"
 	"github.com/arjunsk/cometkv/cmd/benchmark/lotsaa"
 	kv "github.com/arjunsk/cometkv/pkg/a_kv"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	sstio "github.com/arjunsk/cometkv/pkg/c_sst_storage"
 	"io/ioutil"
 	"math/rand"

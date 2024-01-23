@@ -2,6 +2,7 @@ package vacuum_skiplist
 
 import (
 	"context"
+	memtable "github.com/arjunsk/cometkv/pkg/b_memtable"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/base"
 	"github.com/arjunsk/cometkv/pkg/b_memtable/vacuum_skiplist/sl"
 	"github.com/arjunsk/cometkv/pkg/y_internal/entry"
