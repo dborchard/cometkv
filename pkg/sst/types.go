@@ -1,12 +1,12 @@
-package sstio
+package sst
 
 import (
-	"github.com/dborchard/cometkv/pkg/sst_storage/mem_btree"
+	"github.com/dborchard/cometkv/pkg/sst/mem_btree"
 	common "github.com/dborchard/cometkv/pkg/y/entry"
 	"time"
 )
 
-type SstIO interface {
+type IO interface {
 	Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte]
 	Get(key string, snapshotTs time.Time) []byte
 	Create(records []common.Pair[string, []byte]) error
@@ -15,7 +15,7 @@ type SstIO interface {
 	Name() string
 }
 
-var _ SstIO = new(mem_btree.IO)
+var _ IO = new(mem_btree.IO)
 
 type Type int
 
@@ -23,7 +23,7 @@ const (
 	MBtree Type = iota
 )
 
-func New(t Type) SstIO {
+func NewSstIO(t Type) IO {
 	switch t {
 	case MBtree:
 		return mem_btree.NewMBtreeIO()

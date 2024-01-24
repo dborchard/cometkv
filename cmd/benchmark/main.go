@@ -6,7 +6,7 @@ import (
 	lotsaa "github.com/arjunsk/lotsaa"
 	kv "github.com/dborchard/cometkv/pkg/kv"
 	memtable "github.com/dborchard/cometkv/pkg/memtable"
-	sstio "github.com/dborchard/cometkv/pkg/sst_storage"
+	sstio "github.com/dborchard/cometkv/pkg/sst"
 	"github.com/dborchard/cometkv/pkg/y/keygen"
 	"io/ioutil"
 	"math/rand"
