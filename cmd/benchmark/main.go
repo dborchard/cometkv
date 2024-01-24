@@ -100,7 +100,7 @@ func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Durati
 
 func SingleWriter(keyRange int64, kvStore kv.KV, ctx context.Context) {
 	randSeq := rand.New(rand.NewSource(time.Now().UnixNano()))
-	keygen := keygen.Build(keygen.UNIFORM, 1, keyRange)
+	kg := keygen.Build(keygen.UNIFORM, 1, keyRange)
 
 	val := make([]byte, 1024)
 	go func() {
@@ -111,7 +111,7 @@ func SingleWriter(keyRange int64, kvStore kv.KV, ctx context.Context) {
 				return
 			default:
 				// key length 16 --> cache padding improvement
-				key := fmt.Sprintf("%16d", keygen.Next(randSeq))
+				key := fmt.Sprintf("%16d", kg.Next(randSeq))
 				rand.Read(val)
 
 				kvStore.Put(key, val)
