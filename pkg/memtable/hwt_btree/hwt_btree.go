@@ -52,7 +52,8 @@ func (e *EphemeralMemtable) Put(key string, val []byte) {
 	})
 }
 
-func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
+func (e *EphemeralMemtable) Scan(startKey string, count int, opt memtable.ScanOptions) []entry.Pair[string, []byte] {
+	snapshotTs := opt.SnapshotTs
 	//0. Check if snapshotTs has already expired
 	if !timestamp.IsValidTs(snapshotTs, e.base.TTL) {
 		return []entry.Pair[string, []byte]{}
@@ -81,7 +82,7 @@ func (e *EphemeralMemtable) Scan(startKey string, count int, snapshotTs time.Tim
 			strKey := string(entry.ParseKey(item.Key))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if item.Val != nil {
+				if opt.IncludeFull || item.Val != nil {
 					uniqueKVs[strKey] = item.Val
 					idx++
 				}

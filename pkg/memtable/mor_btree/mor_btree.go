@@ -66,7 +66,8 @@ func (s *MoRBTree) Put(key string, val []byte) {
 	})
 }
 
-func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
+func (s *MoRBTree) Scan(startKey string, count int, opt memtable.ScanOptions) []entry.Pair[string, []byte] {
+	snapshotTs := opt.SnapshotTs
 	s.RLock()
 	defer s.RUnlock()
 
@@ -127,7 +128,7 @@ func (s *MoRBTree) Scan(startKey string, count int, snapshotTs time.Time) []entr
 			strKey := string(entry.ParseKey(item.Key))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if item.Val != nil {
+				if opt.IncludeFull || item.Val != nil {
 					uniqueKVs[strKey] = item.Val
 					idx++
 				}

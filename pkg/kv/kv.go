@@ -51,7 +51,7 @@ func (c *CometKV) Put(key string, val []byte) {
 }
 
 func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
-	res := c.mem.Scan(startKey, count, snapshotTs)
+	res := c.mem.Scan(startKey, count, memtable.ScanOptions{SnapshotTs: snapshotTs})
 	diff := count - len(res)
 	if diff > 0 {
 		res = append(res, c.disk.Scan(startKey, diff, snapshotTs)...)
@@ -95,7 +95,7 @@ func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Cont
 
 				startTs := time.Now()
 
-				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
+				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), memtable.ScanOptions{SnapshotTs: time.Now()})
 				_ = c.disk.Create(records)
 
 				endTs := time.Now()

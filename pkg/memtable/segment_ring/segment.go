@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"github.com/alphadose/zenq/v2"
+	"github.com/dborchard/cometkv/pkg/memtable"
 	"github.com/dborchard/cometkv/pkg/y/entry"
 	"github.com/dborchard/cometkv/pkg/y/timestamp"
 	"runtime"
@@ -107,7 +108,8 @@ func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, *list.Element]) {
 	s.pendingUpdates.Add(1)
 }
 
-func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
+func (s *Segment) Scan(startKey string, count int, opt memtable.ScanOptions) []entry.Pair[string, []byte] {
+	snapshotTs := opt.SnapshotTs
 	delay := time.Duration(1)
 	for s.pendingUpdates.Load() > 0 {
 		// Waiting time was generally between 10-250ms
@@ -137,7 +139,7 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry
 			strKey := string(entry.ParseKey(item.Key))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if item.Val != nil && item.Val.Value.([]byte) != nil {
+				if item.Val != nil && (opt.IncludeFull || item.Val.Value.([]byte) != nil) {
 					uniqueKVs[strKey] = item.Val.Value.([]byte)
 					idx++
 				}

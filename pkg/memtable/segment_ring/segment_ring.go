@@ -91,7 +91,8 @@ func (s *SegmentRing) Put(key string, val []byte) {
 	}
 }
 
-func (s *SegmentRing) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
+func (s *SegmentRing) Scan(startKey string, count int, opt memtable.ScanOptions) []entry.Pair[string, []byte] {
+	snapshotTs := opt.SnapshotTs
 	//0. Check if snapshotTs has already expired
 	if !timestamp.IsValidTs(snapshotTs, s.base.TTL) {
 		return []entry.Pair[string, []byte]{}
@@ -101,7 +102,7 @@ func (s *SegmentRing) Scan(startKey string, count int, snapshotTs time.Time) []e
 	segmentIdx := s.findSegmentIdx(snapshotTs)
 
 	// 2. Range Scan delegation
-	return s.segments[segmentIdx].Scan(startKey, count, snapshotTs)
+	return s.segments[segmentIdx].Scan(startKey, count, opt)
 }
 
 func (s *SegmentRing) Prune(_ uint64) int {

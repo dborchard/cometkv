@@ -8,7 +8,7 @@ import (
 
 type IMemtable interface {
 	Put(key string, val []byte)
-	Scan(startKey string, count int, snapshotTs time.Time) []common.Pair[string, []byte]
+	Scan(startKey string, count int, opt ScanOptions) []common.Pair[string, []byte]
 	Prune(expiredTs uint64) int
 
 	Get(key string, snapshotTs time.Time) []byte
@@ -19,6 +19,11 @@ type IMemtable interface {
 	Close()
 
 	Name() string
+}
+
+type ScanOptions struct {
+	SnapshotTs  time.Time
+	IncludeFull bool
 }
 
 type Typ int

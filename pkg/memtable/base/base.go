@@ -28,7 +28,7 @@ func NewBase(bt memtable.IMemtable, gc, ttl time.Duration, logStats bool) *EMBas
 }
 
 func (e *EMBase) Get(key string, snapshotTs time.Time) []byte {
-	res := e.derived.Scan(key, 1, snapshotTs)
+	res := e.derived.Scan(key, 1, memtable.ScanOptions{SnapshotTs: snapshotTs, IncludeFull: true})
 	if len(res) != 1 || res[0].Key != key {
 		return []byte{}
 	}
@@ -73,7 +73,7 @@ func (e *EMBase) Prune(expiredTs uint64) int {
 	return delCount
 }
 func (e *EMBase) Put(key string, val []byte) { panic("not implemented") }
-func (e *EMBase) Scan(k string, c int, Ts time.Time) []entry.Pair[string, []byte] {
+func (e *EMBase) Scan(k string, c int, opt memtable.ScanOptions) []entry.Pair[string, []byte] {
 	panic("not implemented")
 }
 
