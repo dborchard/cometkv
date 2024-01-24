@@ -61,7 +61,12 @@ func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry
 
 func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
 	res := c.mem.Get(key, snapshotTs)
+	if res == nil {
+		// means key is deleted
+		return nil
+	}
 	if len(res) == 0 {
+		// means key not found in memtable. Try disk.
 		res = c.disk.Get(key, snapshotTs)
 	}
 	return res

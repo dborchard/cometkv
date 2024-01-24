@@ -12,6 +12,8 @@ type IO interface {
 	Create(records []common.Pair[string, []byte]) error
 	Destroy()
 
+	//NOTE: SST's are immutable.
+
 	Name() string
 }
 

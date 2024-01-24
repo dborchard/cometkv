@@ -21,7 +21,11 @@ func NewMBtreeIO() *IO {
 }
 
 func (io *IO) Get(key string, snapshotTs time.Time) []byte {
-	panic("implement me")
+	res := io.Scan(key, 1, snapshotTs)
+	if len(res) != 1 || res[0].Key != key {
+		return []byte{}
+	}
+	return res[0].Val
 }
 
 func (io *IO) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
