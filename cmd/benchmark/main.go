@@ -24,6 +24,12 @@ var globalMissCounter atomic.Int64
 
 func main() {
 
+	// KV Params
+	gcInterval := 30 * time.Second   // 5sec, 30sec, 1m
+	ttl := 3 * time.Minute           // 3min
+	flushInterval := 1 * time.Minute // 1min
+
+	// Benchmark Params
 	lotsaa.Output = os.Stdout
 
 	keyRange := int64(10_000_000) // 10M
@@ -32,10 +38,6 @@ func main() {
 
 	testDuration := 10 * time.Minute // 10min, 11min, 12min
 	scanThreadCount := 16            // 16, 32, 64, 128, 254
-
-	gcInterval := 30 * time.Second   // 5sec, 30sec, 1m
-	ttl := 3 * time.Minute           // 3min
-	flushInterval := 1 * time.Minute // 1min
 
 	PrintIP()
 	fmt.Printf("** New Run %s ** \n", time.Now().Format("2006_01_02_15_04_05"))
