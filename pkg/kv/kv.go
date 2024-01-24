@@ -25,8 +25,8 @@ type KV interface {
 var _ KV = new(CometKV)
 
 type CometKV struct {
-	mem  memtable.IMemtable
-	disk sst.IO
+	mem memtable.IMemtable
+	sst sst.IO
 
 	localInsertCounter          int64
 	globalLongRangeScanCount    atomic.Int64
@@ -35,8 +35,8 @@ type CometKV struct {
 
 func NewCometKV(ctx context.Context, mTyp memtable.Typ, dTyp sst.Type, gcInterval, ttl, flushInterval time.Duration) KV {
 	kv := CometKV{
-		mem:  NewMemtable(mTyp, gcInterval, ttl, true, ctx),
-		disk: sst.NewSstIO(dTyp),
+		mem: NewMemtable(mTyp, gcInterval, ttl, true, ctx),
+		sst: sst.NewSstIO(dTyp),
 
 		localInsertCounter:          0,
 		globalLongRangeScanCount:    atomic.Int64{},
@@ -54,7 +54,7 @@ func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry
 	res := c.mem.Scan(startKey, count, memtable.ScanOptions{SnapshotTs: snapshotTs})
 	diff := count - len(res)
 	if diff > 0 {
-		res = append(res, c.disk.Scan(startKey, diff, snapshotTs)...)
+		res = append(res, c.sst.Scan(startKey, diff, snapshotTs)...)
 	}
 	return res
 }
@@ -66,8 +66,8 @@ func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
 		return nil
 	}
 	if len(res) == 0 {
-		// means key not found in memtable. Try disk.
-		res = c.disk.Get(key, snapshotTs)
+		// means key not found in memtable. Try sst.
+		res = c.sst.Get(key, snapshotTs)
 	}
 	return res
 }
@@ -78,7 +78,7 @@ func (c *CometKV) Delete(key string) {
 
 func (c *CometKV) Close() {
 	c.mem.Close()
-	c.disk.Destroy()
+	c.sst.Destroy()
 }
 
 func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Context) {
@@ -96,7 +96,7 @@ func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Cont
 				startTs := time.Now()
 
 				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), memtable.ScanOptions{SnapshotTs: time.Now()})
-				_ = c.disk.Create(records)
+				_ = c.sst.Create(records)
 
 				endTs := time.Now()
 				diff := endTs.Sub(startTs)
@@ -123,5 +123,5 @@ func (c *CometKV) MemTableName() string {
 	return c.mem.Name()
 }
 func (c *CometKV) SstStorageName() string {
-	return c.disk.Name()
+	return c.sst.Name()
 }
