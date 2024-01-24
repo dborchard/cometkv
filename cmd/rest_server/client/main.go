@@ -34,6 +34,7 @@ func main() {
 	// get entries
 	fmt.Println(string(c.Get("1")))
 	fmt.Println(string(c.Get("2")))
+	fmt.Println(string(c.Get("3")))
 	fmt.Println("-------")
 
 	c.Close()
