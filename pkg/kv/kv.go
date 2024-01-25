@@ -25,22 +25,16 @@ type KV interface {
 var _ KV = new(CometKV)
 
 type CometKV struct {
-	mem memtable.IMemtable
-	sst sst.IO
-
-	localInsertCounter          int64
-	globalLongRangeScanCount    atomic.Int64
-	globalLongRangeScanDuration time.Duration
+	mem                memtable.IMemtable
+	sst                sst.IO
+	localInsertCounter int64
 }
 
 func NewCometKV(ctx context.Context, mTyp memtable.Typ, dTyp sst.Type, gcInterval, ttl, flushInterval time.Duration) KV {
 	kv := CometKV{
-		mem: NewMemtable(mTyp, gcInterval, ttl, true, ctx),
-		sst: sst.NewSstIO(dTyp),
-
-		localInsertCounter:          0,
-		globalLongRangeScanCount:    atomic.Int64{},
-		globalLongRangeScanDuration: time.Duration(0),
+		mem:                NewMemtable(mTyp, gcInterval, ttl, true, ctx),
+		sst:                sst.NewSstIO(dTyp),
+		localInsertCounter: 0,
 	}
 	kv.startFlushThread(flushInterval, ctx)
 	return &kv
@@ -79,6 +73,7 @@ func (c *CometKV) Delete(key string) {
 func (c *CometKV) Close() {
 	c.mem.Close()
 	c.sst.Destroy()
+	c.localInsertCounter = 0
 }
 
 func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Context) {
@@ -92,17 +87,8 @@ func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Cont
 				return
 			case <-ticker.C:
 				totalInsertsForLongRangeDuration := c.atomicCasLocalInsertCounter()
-
-				startTs := time.Now()
-
 				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), memtable.ScanOptions{SnapshotTs: time.Now()})
 				_ = c.sst.Create(records)
-
-				endTs := time.Now()
-				diff := endTs.Sub(startTs)
-
-				c.globalLongRangeScanCount.Add(int64(len(records)))
-				c.globalLongRangeScanDuration += diff
 			}
 		}
 	}()
@@ -122,6 +108,7 @@ func (c *CometKV) atomicCasLocalInsertCounter() int64 {
 func (c *CometKV) MemTableName() string {
 	return c.mem.Name()
 }
+
 func (c *CometKV) SstStorageName() string {
 	return c.sst.Name()
 }
