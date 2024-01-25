@@ -32,7 +32,7 @@ type CometKV struct {
 
 func NewCometKV(ctx context.Context, mTyp memtable.Typ, dTyp sst.Type, gcInterval, ttl, flushInterval time.Duration) KV {
 	kv := CometKV{
-		mem:                NewMemtable(mTyp, gcInterval, ttl, true, ctx),
+		mem:                NewMemtable(mTyp, gcInterval, ttl, false, ctx),
 		sst:                sst.NewSstIO(dTyp),
 		localInsertCounter: 0,
 	}
