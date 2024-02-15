@@ -69,14 +69,14 @@ func (s *Segment) StartListener() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		var entry *entry.Pair[[]byte, *list.Element]
+		var item *entry.Pair[[]byte, *list.Element]
 		var isQueueOpen bool
 
 		defer s.asyncKeyPtrChan.Close()
 		for {
 
-			if entry, isQueueOpen = s.asyncKeyPtrChan.Read(); isQueueOpen {
-				s.tree.Set(*entry)
+			if item, isQueueOpen = s.asyncKeyPtrChan.Read(); isQueueOpen {
+				s.tree.Set(*item)
 				s.pendingUpdates.Add(-1)
 			}
 
