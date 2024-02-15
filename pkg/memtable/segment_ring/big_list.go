@@ -5,6 +5,7 @@ import "sync"
 type List interface {
 	Put(v []byte) uint64
 	Get(idx uint64) []byte
+	Init()
 }
 
 type BigList struct {
@@ -18,6 +19,14 @@ func NewBigList() *BigList {
 		data:  make([]byte, 0),
 		index: make([]uint64, 0),
 	}
+}
+
+func (l *BigList) Init() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	l.data = make([]byte, 0)
+	l.index = make([]uint64, 0)
 }
 
 func (l *BigList) Put(v []byte) uint64 {
