@@ -29,22 +29,22 @@ func Test1(
 	assert.Equal(t, 4, tbl.Len())
 
 	now := time.Now()
-	rows := tbl.Scan("1", 1, now)
+	rows := tbl.Scan("1", 1, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, now)
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 
-	rows = tbl.Scan("1", 3, now)
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
-	rows = tbl.Scan("1", 4, now)
+	rows = tbl.Scan("1", 4, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 4, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
@@ -75,22 +75,22 @@ func Test2(
 	assert.Equal(t, 4, tbl.Len())
 
 	now := time.Now()
-	rows := tbl.Scan("1", 1, now)
+	rows := tbl.Scan("1", 1, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, now)
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 
-	rows = tbl.Scan("1", 3, now)
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
-	rows = tbl.Scan("1", 4, now)
+	rows = tbl.Scan("1", 4, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 4, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
@@ -121,22 +121,22 @@ func Test3(
 	assert.Equal(t, 4, tbl.Len())
 
 	now := time.Now()
-	rows := tbl.Scan("1", 1, now)
+	rows := tbl.Scan("1", 1, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, now)
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 
-	rows = tbl.Scan("1", 3, now)
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
-	rows = tbl.Scan("1", 4, now)
+	rows = tbl.Scan("1", 4, memtable.ScanOptions{SnapshotTs: now})
 	assert.Equal(t, 4, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
@@ -163,11 +163,11 @@ func Test4(
 	}
 
 	now := time.Now()
-	rows := tbl.Scan("1", 10, now)
+	rows := tbl.Scan("1", 10, memtable.ScanOptions{SnapshotTs: now})
 	assert.True(t, len(rows) <= 7)
 
 	snapTs := now.Add(-7 * time.Second)
-	rows = tbl.Scan("1", 10, snapTs)
+	rows = tbl.Scan("1", 10, memtable.ScanOptions{SnapshotTs: snapTs})
 	assert.Equal(t, 0, len(rows))
 
 	tbl.Close()
@@ -184,26 +184,26 @@ func Test5(
 	tbl.Put("2", []byte("b"))
 	tbl.Put("3", []byte("c"))
 
-	rows := tbl.Scan("1", 2, time.Now())
+	rows := tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: time.Now()})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 
-	rows = tbl.Scan("1", 3, time.Now())
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: time.Now()})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
 	tbl.Put("2", []byte("d"))
-	rows = tbl.Scan("1", 3, time.Now())
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: time.Now()})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("d"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
 	tbl.Delete("1")
-	rows = tbl.Scan("1", 3, time.Now())
+	rows = tbl.Scan("1", 3, memtable.ScanOptions{SnapshotTs: time.Now()})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("d"), rows[0].Val)
 	assert.Equal(t, []byte("c"), rows[1].Val)
@@ -260,19 +260,19 @@ func Test9(
 
 	assert.Equal(t, 4, tbl.Len())
 
-	rows := tbl.Scan("1", 2, time.Now().Add(-4*time.Second))
+	rows := tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: time.Now().Add(-4 * time.Second)})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, time.Now().Add(-3*time.Second))
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: time.Now().Add(-3 * time.Second)})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("b"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, time.Now().Add(-2*time.Second))
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: time.Now().Add(-2 * time.Second)})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("c"), rows[0].Val)
 
-	rows = tbl.Scan("1", 2, time.Now().Add(-1*time.Second))
+	rows = tbl.Scan("1", 2, memtable.ScanOptions{SnapshotTs: time.Now().Add(-1 * time.Second)})
 	assert.Equal(t, 1, len(rows))
 	assert.Equal(t, []byte("d"), rows[0].Val)
 
@@ -297,18 +297,18 @@ func Test10(
 
 	assert.Equal(t, 4, tbl.Len())
 
-	rows := tbl.Scan("2", 4, time.Now().Add(-2*time.Second))
+	rows := tbl.Scan("2", 4, memtable.ScanOptions{SnapshotTs: time.Now().Add(-2 * time.Second)})
 	assert.Equal(t, 2, len(rows))
 	assert.Equal(t, []byte("b"), rows[0].Val)
 	assert.Equal(t, []byte("c"), rows[1].Val)
 
-	rows = tbl.Scan("1", 4, time.Now().Add(-2*time.Second))
+	rows = tbl.Scan("1", 4, memtable.ScanOptions{SnapshotTs: time.Now().Add(-2 * time.Second)})
 	assert.Equal(t, 3, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
 	assert.Equal(t, []byte("c"), rows[2].Val)
 
-	rows = tbl.Scan("1", 4, time.Now().Add(-1*time.Second))
+	rows = tbl.Scan("1", 4, memtable.ScanOptions{SnapshotTs: time.Now().Add(-1 * time.Second)})
 	assert.Equal(t, 4, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
@@ -336,7 +336,7 @@ func Test11(
 
 	assert.Equal(t, 4, tbl.Len())
 
-	rows := tbl.Scan("", tbl.Len(), time.Now())
+	rows := tbl.Scan("", tbl.Len(), memtable.ScanOptions{SnapshotTs: time.Now()})
 	assert.Equal(t, 4, len(rows))
 	assert.Equal(t, []byte("a"), rows[0].Val)
 	assert.Equal(t, []byte("b"), rows[1].Val)
