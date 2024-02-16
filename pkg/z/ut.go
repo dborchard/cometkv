@@ -209,7 +209,7 @@ func Test5(
 	assert.Equal(t, []byte("c"), rows[1].Val)
 
 	// get entries
-	assert.Equal(t, []byte{}, tbl.Get("1", time.Now()))
+	assert.Equal(t, []byte(nil), tbl.Get("1", time.Now()))
 	assert.Equal(t, []byte("d"), tbl.Get("2", time.Now()))
 	assert.Equal(t, []byte("c"), tbl.Get("3", time.Now()))
 
