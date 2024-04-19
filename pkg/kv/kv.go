@@ -48,6 +48,7 @@ func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry
 	res := c.mem.Scan(startKey, count, memtable.ScanOptions{SnapshotTs: snapshotTs})
 	diff := count - len(res)
 	if diff > 0 {
+		//TODO: this is wrong.
 		res = append(res, c.sst.Scan(startKey, diff, snapshotTs)...)
 	}
 	return res
