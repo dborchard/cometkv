@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+const (
+	MaxArenaSize = 1 << 40
+)
+
 // MoRArenaSkl Ephemeral Copy-Ahead MV Tree
 type MoRArenaSkl struct {
 	base                  *base.EMBase
@@ -40,7 +44,7 @@ func (s *MoRArenaSkl) init(size int) {
 	s.segments = make([]*arenaskl.Skiplist, size)
 
 	for i := 0; i < size; i++ {
-		s.segments[i] = arenaskl.NewSkiplist(arenaskl.NewArena(1 << 20))
+		s.segments[i] = arenaskl.NewSkiplist(arenaskl.NewArena(MaxArenaSize))
 	}
 }
 
@@ -148,7 +152,7 @@ func (s *MoRArenaSkl) Prune(_ uint64) int {
 	if pruneSegmentIdx < 0 {
 		pruneSegmentIdx += len(s.segments)
 	}
-	s.segments[pruneSegmentIdx] = arenaskl.NewSkiplist(arenaskl.NewArena(1 << 20))
+	s.segments[pruneSegmentIdx] = arenaskl.NewSkiplist(arenaskl.NewArena(MaxArenaSize))
 
 	return 0
 }
