@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MaxArenaSize = 1 << 40
+	MaxArenaSize = math.MaxUint32
 )
 
 // MoRArenaSkl Ephemeral Copy-Ahead MV Tree
