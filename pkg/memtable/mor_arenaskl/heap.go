@@ -1,4 +1,4 @@
-package mor_cow
+package mor_arenaskl
 
 import (
 	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl"

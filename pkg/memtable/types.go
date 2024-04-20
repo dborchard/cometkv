@@ -30,6 +30,7 @@ const (
 	VacuumCoW
 	MoRBTree
 	MoRCoWBTree
+	MoRArenaSkl
 	HWTBTree
 	HWTCoWBTree
 )

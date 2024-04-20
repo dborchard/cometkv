@@ -1,4 +1,4 @@
-package mor_cow
+package mor_arenaskl
 
 import (
 	"container/heap"

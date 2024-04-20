@@ -5,6 +5,7 @@ import (
 	memtable "github.com/dborchard/cometkv/pkg/memtable"
 	"github.com/dborchard/cometkv/pkg/memtable/hwt_btree"
 	"github.com/dborchard/cometkv/pkg/memtable/hwt_cow"
+	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl"
 	"github.com/dborchard/cometkv/pkg/memtable/mor_btree"
 	"github.com/dborchard/cometkv/pkg/memtable/mor_cow"
 	"github.com/dborchard/cometkv/pkg/memtable/segment_ring"
@@ -34,6 +35,9 @@ func NewMemtable(typ memtable.Typ, gcInterval, ttl time.Duration, logStats bool,
 
 	case memtable.MoRCoWBTree:
 		tree = mor_cow.New(gcInterval, ttl, logStats, ctx)
+
+	case memtable.MoRArenaSkl:
+		tree = mor_arenaskl.New(gcInterval, ttl, logStats, ctx)
 
 	case memtable.HWTBTree:
 		tree = hwt_btree.New(gcInterval, ttl, logStats, ctx)

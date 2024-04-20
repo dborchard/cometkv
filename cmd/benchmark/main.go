@@ -43,6 +43,7 @@ func main() {
 
 	fmt.Printf("GC used %s @ time %s \n", gcInterval, time.Now().Format("2006_01_02_15_04_05"))
 	for tc := scanThreadCount; tc <= 1024; tc = tc * 2 {
+		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.MoRArenaSkl, keyRange, scanWidth, tc, variableWidth)
 		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.HWTCoWBTree, keyRange, scanWidth, tc, variableWidth)
 		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.MoRCoWBTree, keyRange, scanWidth, tc, variableWidth)
 		RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration, memtable.SegmentRing, keyRange, scanWidth, tc, variableWidth)
