@@ -125,7 +125,7 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 			strKey := string(entry.ParseKey(itemKey))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if itemVal != nil {
+				if itemVal != nil && len(itemVal) > 0 {
 					uniqueKVs[strKey] = itemVal
 					idx++
 				}
