@@ -8,7 +8,6 @@ import (
 	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl"
 	"github.com/dborchard/cometkv/pkg/y/entry"
 	"github.com/dborchard/cometkv/pkg/y/timestamp"
-	"github.com/tidwall/btree"
 	"math"
 	"time"
 )
@@ -59,7 +58,10 @@ func (s *MoRArenaSkl) Put(key string, val []byte) {
 	var it arenaskl.Iterator
 	it.Init(s.segments[activeSegmentIdx])
 
-	_ = it.Add(internalKey, val, 0)
+	err := it.Add(internalKey, val, 0)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
@@ -88,8 +90,10 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 		//TODO: Fix
 		var iter arenaskl.Iterator
 		iter.Init(s.segments[pos])
-		iter.Seek(internalKey)
-		heap.Push(mh, &iter)
+		_ = iter.Seek(internalKey)
+		if iter.Value() != nil {
+			heap.Push(mh, &iter)
+		}
 	}
 
 	// 3.a Variable
@@ -99,12 +103,13 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 	snapshotTsNano := timestamp.ToUnit64(snapshotTs)
 
 	for mh.Len() > 0 {
-		smallestIter := heap.Pop(mh).(*btree.IterG[entry.Pair[[]byte, []byte]])
-		item := smallestIter.Item()
-		if smallestIter.Next() {
+		smallestIter := heap.Pop(mh).(*arenaskl.Iterator)
+		itemKey := smallestIter.Key()
+		itemVal := smallestIter.Value()
+		if smallestIter.Next(); smallestIter.Value() != nil {
 			heap.Push(mh, smallestIter)
 		} else {
-			smallestIter.Release()
+			//smallestIter.Release()
 		}
 
 		// 3.b scan logic
@@ -112,16 +117,16 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 			break
 		}
 		// expiredTs < ItemTs < snapshotTs
-		itemTs := entry.ParseTs(item.Key)
+		itemTs := entry.ParseTs(itemKey)
 		lessThanOrEqualToSnapshotTs := itemTs <= snapshotTsNano
 		greaterThanExpiredTs := timestamp.IsValidTsUint(itemTs, s.base.TTL)
 
 		if lessThanOrEqualToSnapshotTs && greaterThanExpiredTs {
-			strKey := string(entry.ParseKey(item.Key))
+			strKey := string(entry.ParseKey(itemKey))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if item.Val != nil {
-					uniqueKVs[strKey] = item.Val
+				if itemVal != nil {
+					uniqueKVs[strKey] = itemVal
 					idx++
 				}
 			}
