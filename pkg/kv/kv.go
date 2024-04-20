@@ -52,17 +52,23 @@ func (c *CometKV) Put(key string, val []byte) {
 
 func (c *CometKV) Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte] {
 	res := c.mem.Scan(startKey, count, snapshotTs)
-	diff := count - len(res)
-	if diff > 0 {
-		res = append(res, c.disk.Scan(startKey, diff, snapshotTs)...)
+	if c.disk != nil {
+		//This is wrong.
+		diff := count - len(res)
+		if diff > 0 {
+			res = append(res, c.disk.Scan(startKey, diff, snapshotTs)...)
+		}
 	}
+
 	return res
 }
 
 func (c *CometKV) Get(key string, snapshotTs time.Time) []byte {
 	res := c.mem.Get(key, snapshotTs)
-	if len(res) == 0 {
-		res = c.disk.Get(key, snapshotTs)
+	if c.disk != nil {
+		if len(res) == 0 {
+			res = c.disk.Get(key, snapshotTs)
+		}
 	}
 	return res
 }
@@ -73,7 +79,9 @@ func (c *CometKV) Delete(key string) {
 
 func (c *CometKV) Close() {
 	c.mem.Close()
-	c.disk.Destroy()
+	if c.disk != nil {
+		c.disk.Destroy()
+	}
 }
 
 func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Context) {
@@ -91,7 +99,10 @@ func (c *CometKV) startFlushThread(flushInterval time.Duration, ctx context.Cont
 				startTs := time.Now()
 
 				records := c.mem.Scan("", int(totalInsertsForLongRangeDuration), time.Now())
-				_ = c.disk.Create(records)
+				if c.disk != nil {
+					fmt.Printf("Flushing %d records to disk\n", len(records))
+					_ = c.disk.Create(records)
+				}
 
 				endTs := time.Now()
 				diff := endTs.Sub(startTs)
@@ -118,5 +129,8 @@ func (c *CometKV) MemTableName() string {
 	return c.mem.Name()
 }
 func (c *CometKV) SstStorageName() string {
+	if c.disk == nil {
+		return "None"
+	}
 	return c.disk.Name()
 }

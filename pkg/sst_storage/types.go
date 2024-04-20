@@ -21,6 +21,7 @@ type Type int
 
 const (
 	MBtree Type = iota
+	Nil
 )
 
 func New(t Type) SstIO {
@@ -28,6 +29,6 @@ func New(t Type) SstIO {
 	case MBtree:
 		return mem_btree.NewMBtreeIO()
 	default:
-		panic("unknown disk_io type")
+		return nil
 	}
 }

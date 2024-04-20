@@ -65,7 +65,7 @@ func RangeScanBenchTest(gcInterval, ttl, flushInterval, testDuration time.Durati
 	ctx, cancel := context.WithCancel(ctx)
 
 	// 1. Build MemTable
-	kvStore := kv.NewCometKV(ctx, typ, sstio.MBtree, gcInterval, ttl, flushInterval)
+	kvStore := kv.NewCometKV(ctx, typ, sstio.Nil, gcInterval, ttl, flushInterval)
 	tableName := kvStore.MemTableName()
 
 	// 2.a Start Single Writer to the kvStore
