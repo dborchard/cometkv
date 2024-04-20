@@ -44,9 +44,9 @@ Key differences:
 package arenaskl
 
 import (
-	"bytes"
 	"errors"
 	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl/internal/fastrand"
+	"github.com/dborchard/cometkv/pkg/y/entry"
 	"math"
 	"sync/atomic"
 	"unsafe"
@@ -212,7 +212,8 @@ func (s *Skiplist) findSpliceForLevel(key []byte, level int, start *node) (prev,
 			break
 		}
 
-		cmp := bytes.Compare(key, nextKey)
+		cmp := entry.CompareKeys(key, nextKey)
+		//cmp := bytes.Compare(key, nextKey)
 		if cmp == 0 {
 			// Equality case.
 			found = true
