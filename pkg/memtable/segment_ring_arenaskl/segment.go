@@ -1,35 +1,40 @@
 package segment_ring_arenaskl
 
 import (
-	"container/list"
 	"context"
 	"github.com/alphadose/zenq/v2"
+	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl"
 	"github.com/dborchard/cometkv/pkg/y/entry"
 	"github.com/dborchard/cometkv/pkg/y/timestamp"
+	"math"
 	"runtime"
 	"sync/atomic"
 	"time"
 )
 
+const (
+	MaxArenaSize = math.MaxUint32
+)
+
 type Segment struct {
 	// Original Structure
-	tree *BTreeGCoW[entry.Pair[[]byte, *list.Element]]
-	vlog *list.List
+	tree *arenaskl.Skiplist
+	vlog *arenaskl.Arena
 	ctx  context.Context
 
 	// Ring Enhancement
 	nextPtr *Segment
 
 	// Async Logic
-	asyncKeyPtrChan *zenq.ZenQ[*entry.Pair[[]byte, *list.Element]]
+	asyncKeyPtrChan *zenq.ZenQ[*entry.Pair[[]byte, uint32]]
 	done            atomic.Bool
 	pendingUpdates  atomic.Int64
 }
 
 type ISegment interface {
-	AddValue(val []byte) (lePtr *list.Element)
-	AddIndex(entry *entry.Pair[[]byte, *list.Element])
-	AddIndexAsync(entry *entry.Pair[[]byte, *list.Element])
+	AddValue(val []byte) (lePtr uint32)
+	AddIndex(entry *entry.Pair[[]byte, uint32])
+	AddIndexAsync(entry *entry.Pair[[]byte, uint32])
 
 	Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte]
 	Free() int
@@ -39,12 +44,10 @@ type ISegment interface {
 
 func NewSegment(ctx context.Context) *Segment {
 	segment := Segment{
-		tree: NewBTreeGCoW(func(a, b entry.Pair[[]byte, *list.Element]) bool {
-			return entry.CompareKeys(a.Key, b.Key) < 0
-		}),
-		vlog:            list.New(),
+		tree:            arenaskl.NewSkiplist(arenaskl.NewArena(MaxArenaSize)),
+		vlog:            arenaskl.NewArena(MaxArenaSize),
 		ctx:             ctx,
-		asyncKeyPtrChan: zenq.New[*entry.Pair[[]byte, *list.Element]](1 << 20),
+		asyncKeyPtrChan: zenq.New[*entry.Pair[[]byte, uint32]](1 << 20),
 		done:            atomic.Bool{},
 	}
 
@@ -68,14 +71,16 @@ func (s *Segment) StartListener() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		var entry *entry.Pair[[]byte, *list.Element]
+		var entry *entry.Pair[[]byte, uint32]
 		var isQueueOpen bool
 
+		var it *arenaskl.Iterator
+		it.Init(s.tree)
 		defer s.asyncKeyPtrChan.Close()
 		for {
 
 			if entry, isQueueOpen = s.asyncKeyPtrChan.Read(); isQueueOpen {
-				s.tree.Set(*entry)
+				_ = it.Add(entry.Key, EncodeUint32(&entry.Val), 0)
 				s.pendingUpdates.Add(-1)
 			}
 
@@ -86,11 +91,15 @@ func (s *Segment) StartListener() {
 	}()
 }
 
-func (s *Segment) AddValue(val []byte) (lePtr *list.Element) {
-	return s.vlog.PushFront(val)
+func (s *Segment) AddValue(val []byte) (lePtr uint32) {
+	offset, err := s.vlog.Alloc(uint32(len(val)), 0, arenaskl.Align1)
+	if err == nil {
+		copy(s.vlog.GetBytes(offset, uint32(len(val))), val)
+	}
+	return offset
 }
 
-func (s *Segment) AddIndex(entry *entry.Pair[[]byte, *list.Element]) {
+func (s *Segment) AddIndex(entry *entry.Pair[[]byte, uint32]) {
 	// For explicit serialization
 	delay := time.Duration(1)
 	for s.pendingUpdates.Load() > 0 {
@@ -98,11 +107,12 @@ func (s *Segment) AddIndex(entry *entry.Pair[[]byte, *list.Element]) {
 		time.Sleep(delay * time.Millisecond)
 		delay = delay * 2
 	}
-
-	s.tree.Set(*entry)
+	var it *arenaskl.Iterator
+	it.Init(s.tree)
+	_ = it.Add(entry.Key, EncodeUint32(&entry.Val), 0)
 }
 
-func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, *list.Element]) {
+func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, uint32]) {
 	s.asyncKeyPtrChan.Write(entry)
 	s.pendingUpdates.Add(1)
 }
@@ -119,32 +129,34 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry
 
 	// 1. Do range scan
 	internalKey := entry.KeyWithTs([]byte(startKey), timestamp.ToUnit64(snapshotTs))
-	startRow := entry.Pair[[]byte, *list.Element]{Key: internalKey}
 	uniqueKVs := make(map[string][]byte)
 	seenKeys := make(map[string]any)
 
 	idx := 1
-	s.tree.Ascend(startRow, func(item entry.Pair[[]byte, *list.Element]) bool {
+	var it arenaskl.Iterator
+	it.Init(s.tree)
+	it.Seek(internalKey)
+	for it.Valid() {
+		// 3.b scan logic
 		if idx > count {
-			return false
+			break
 		}
 
-		// expiredTs < ItemTs < snapshotTs
-		itemTs := entry.ParseTs(item.Key)
+		itemTs := entry.ParseTs(it.Key())
 		lessThanOrEqualToSnapshotTs := itemTs <= snapshotTsNano
 
 		if lessThanOrEqualToSnapshotTs {
-			strKey := string(entry.ParseKey(item.Key))
+			strKey := string(entry.ParseKey(it.Key()))
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
-				if item.Val != nil && item.Val.Value.([]byte) != nil {
-					uniqueKVs[strKey] = item.Val.Value.([]byte)
+				if it.Value() != nil {
+					uniqueKVs[strKey] = it.Value()
 					idx++
 				}
 			}
 		}
-		return true
-	})
+		it.Next()
+	}
 
 	return entry.MapToArray(uniqueKVs)
 }
@@ -153,12 +165,19 @@ func (s *Segment) Free() int {
 	//NOTE: DO NOT CLOSE WRITER THREAD HERE.
 	removedCount := s.Len()
 
-	s.tree.Clear()
-	s.vlog.Init()
+	//s.tree.Reset()
+	s.vlog.Reset()
 
 	return removedCount
 }
 
 func (s *Segment) Len() int {
-	return s.tree.Len()
+	total := 0
+	var it arenaskl.Iterator
+	it.Init(s.tree)
+	for it.SeekToFirst(); it.Valid(); it.Next() {
+		total++
+	}
+
+	return total
 }
