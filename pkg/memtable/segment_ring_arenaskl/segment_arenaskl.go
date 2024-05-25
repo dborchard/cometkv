@@ -93,10 +93,11 @@ func (s *Segment) StartListener() {
 
 func (s *Segment) AddValue(val []byte) (lePtr uint64) {
 	offset, err := s.vlog.Alloc(uint32(len(val)), 0, arenaskl.Align1)
-	if err == nil {
-		copy(s.vlog.GetBytes(offset, uint32(len(val))), val)
+	if err != nil {
+		panic("value is too large")
 	}
 
+	copy(s.vlog.GetBytes(offset, uint32(len(val))), val)
 	return arenaskl.EncodeValue(offset, uint16(len(val)), 0)
 }
 
@@ -141,7 +142,6 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry
 	var valOffset uint32
 	var valSize uint16
 	for it.Valid() {
-		// 3.b scan logic
 		if idx > count {
 			break
 		}
