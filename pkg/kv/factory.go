@@ -9,6 +9,7 @@ import (
 	"github.com/dborchard/cometkv/pkg/memtable/mor_btree"
 	"github.com/dborchard/cometkv/pkg/memtable/mor_cow"
 	"github.com/dborchard/cometkv/pkg/memtable/segment_ring"
+	"github.com/dborchard/cometkv/pkg/memtable/segment_ring_arenaskl"
 	"github.com/dborchard/cometkv/pkg/memtable/vacuum_btree"
 	"github.com/dborchard/cometkv/pkg/memtable/vacuum_cow"
 	"github.com/dborchard/cometkv/pkg/memtable/vacuum_skiplist"
@@ -20,6 +21,9 @@ func NewMemtable(typ memtable.Typ, gcInterval, ttl time.Duration, logStats bool,
 	switch typ {
 	case memtable.SegmentRing:
 		tree = segment_ring.New(gcInterval, ttl, logStats, ctx)
+
+	case memtable.SegmentArenaSkl:
+		segment_ring_arenaskl.New(gcInterval, ttl, logStats, ctx)
 
 	case memtable.VacuumSkipList:
 		tree = vacuum_skiplist.New(gcInterval, ttl, logStats, ctx)

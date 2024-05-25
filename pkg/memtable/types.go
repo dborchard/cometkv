@@ -33,4 +33,5 @@ const (
 	MoRArenaSkl
 	HWTBTree
 	HWTCoWBTree
+	SegmentArenaSkl
 )
