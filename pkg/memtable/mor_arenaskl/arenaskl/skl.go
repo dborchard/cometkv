@@ -197,7 +197,7 @@ func (s *Skiplist) allocVal(val []byte, meta uint16) (uint64, error) {
 	}
 
 	copy(s.arena.GetBytes(valOffset, uint32(valSize)), val)
-	return encodeValue(valOffset, valSize, meta), nil
+	return EncodeValue(valOffset, valSize, meta), nil
 }
 
 func (s *Skiplist) findSpliceForLevel(key []byte, level int, start *node) (prev, next *node, found bool) {
@@ -242,11 +242,11 @@ func (s *Skiplist) getPrev(nd *node, h int) *node {
 	return (*node)(s.arena.GetPointer(offset))
 }
 
-func encodeValue(valOffset uint32, valSize, meta uint16) uint64 {
+func EncodeValue(valOffset uint32, valSize, meta uint16) uint64 {
 	return uint64(meta)<<48 | uint64(valSize)<<32 | uint64(valOffset)
 }
 
-func decodeValue(value uint64) (valOffset uint32, valSize uint16) {
+func DecodeValue(value uint64) (valOffset uint32, valSize uint16) {
 	valOffset = uint32(value)
 	valSize = uint16(value >> 32)
 	return

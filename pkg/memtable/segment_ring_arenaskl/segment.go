@@ -26,15 +26,15 @@ type Segment struct {
 	nextPtr *Segment
 
 	// Async Logic
-	asyncKeyPtrChan *zenq.ZenQ[*entry.Pair[[]byte, uint32]]
+	asyncKeyPtrChan *zenq.ZenQ[*entry.Pair[[]byte, uint64]]
 	done            atomic.Bool
 	pendingUpdates  atomic.Int64
 }
 
 type ISegment interface {
-	AddValue(val []byte) (lePtr uint32)
-	AddIndex(entry *entry.Pair[[]byte, uint32])
-	AddIndexAsync(entry *entry.Pair[[]byte, uint32])
+	AddValue(val []byte) (lePtr uint64)
+	AddIndex(entry *entry.Pair[[]byte, uint64])
+	AddIndexAsync(entry *entry.Pair[[]byte, uint64])
 
 	Scan(startKey string, count int, snapshotTs time.Time) []entry.Pair[string, []byte]
 	Free() int
@@ -47,7 +47,7 @@ func NewSegment(ctx context.Context) *Segment {
 		tree:            arenaskl.NewSkiplist(arenaskl.NewArena(MaxArenaSize)),
 		vlog:            arenaskl.NewArena(MaxArenaSize),
 		ctx:             ctx,
-		asyncKeyPtrChan: zenq.New[*entry.Pair[[]byte, uint32]](1 << 20),
+		asyncKeyPtrChan: zenq.New[*entry.Pair[[]byte, uint64]](1 << 20),
 		done:            atomic.Bool{},
 	}
 
@@ -71,7 +71,7 @@ func (s *Segment) StartListener() {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		var entry *entry.Pair[[]byte, uint32]
+		var entry *entry.Pair[[]byte, uint64]
 		var isQueueOpen bool
 
 		var it *arenaskl.Iterator
@@ -80,7 +80,7 @@ func (s *Segment) StartListener() {
 		for {
 
 			if entry, isQueueOpen = s.asyncKeyPtrChan.Read(); isQueueOpen {
-				_ = it.Add(entry.Key, EncodeUint32(&entry.Val), 0)
+				_ = it.Add(entry.Key, EncodeUint64(&entry.Val), 0)
 				s.pendingUpdates.Add(-1)
 			}
 
@@ -91,15 +91,16 @@ func (s *Segment) StartListener() {
 	}()
 }
 
-func (s *Segment) AddValue(val []byte) (lePtr uint32) {
+func (s *Segment) AddValue(val []byte) (lePtr uint64) {
 	offset, err := s.vlog.Alloc(uint32(len(val)), 0, arenaskl.Align1)
 	if err == nil {
 		copy(s.vlog.GetBytes(offset, uint32(len(val))), val)
 	}
-	return offset
+
+	return arenaskl.EncodeValue(offset, uint16(len(val)), 0)
 }
 
-func (s *Segment) AddIndex(entry *entry.Pair[[]byte, uint32]) {
+func (s *Segment) AddIndex(entry *entry.Pair[[]byte, uint64]) {
 	// For explicit serialization
 	delay := time.Duration(1)
 	for s.pendingUpdates.Load() > 0 {
@@ -109,10 +110,10 @@ func (s *Segment) AddIndex(entry *entry.Pair[[]byte, uint32]) {
 	}
 	var it *arenaskl.Iterator
 	it.Init(s.tree)
-	_ = it.Add(entry.Key, EncodeUint32(&entry.Val), 0)
+	_ = it.Add(entry.Key, EncodeUint64(&entry.Val), 0)
 }
 
-func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, uint32]) {
+func (s *Segment) AddIndexAsync(entry *entry.Pair[[]byte, uint64]) {
 	s.asyncKeyPtrChan.Write(entry)
 	s.pendingUpdates.Add(1)
 }
@@ -136,6 +137,9 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry
 	var it arenaskl.Iterator
 	it.Init(s.tree)
 	it.Seek(internalKey)
+	var offsetUint64 uint64
+	var valOffset uint32
+	var valSize uint16
 	for it.Valid() {
 		// 3.b scan logic
 		if idx > count {
@@ -150,7 +154,9 @@ func (s *Segment) Scan(startKey string, count int, snapshotTs time.Time) []entry
 			if _, seen := seenKeys[strKey]; !seen {
 				seenKeys[strKey] = true
 				if it.Value() != nil {
-					uniqueKVs[strKey] = it.Value()
+					offsetUint64 = DecodeUint64(it.Value())
+					valOffset, valSize = arenaskl.DecodeValue(offsetUint64)
+					uniqueKVs[strKey] = s.vlog.GetBytes(valOffset, uint32(valSize))
 					idx++
 				}
 			}

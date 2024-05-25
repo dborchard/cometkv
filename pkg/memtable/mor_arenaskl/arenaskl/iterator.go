@@ -61,7 +61,7 @@ func (it *Iterator) Key() []byte {
 
 // Value returns the value at the current position.
 func (it *Iterator) Value() []byte {
-	valOffset, valSize := decodeValue(it.value)
+	valOffset, valSize := DecodeValue(it.value)
 	return it.arena.GetBytes(valOffset, uint32(valSize))
 }
 
@@ -255,8 +255,8 @@ func (it *Iterator) SetMeta(meta uint16) error {
 	// changed back to the original value, which would make it impossible to
 	// detect updates had occurred in the interim.
 	if meta > decodeMeta(it.value) {
-		valOffset, valSize := decodeValue(it.value)
-		new := encodeValue(valOffset, valSize, meta)
+		valOffset, valSize := DecodeValue(it.value)
+		new := EncodeValue(valOffset, valSize, meta)
 		return it.trySetValue(new)
 	}
 

@@ -75,7 +75,7 @@ func (s *SegmentRing) Put(key string, val []byte) {
 
 	// 3. Create entry for "Index"
 	internalKey := entry.KeyWithTs([]byte(key), timestamp.ToUnit64(currTs))
-	entry := &entry.Pair[[]byte, uint32]{Key: internalKey, Val: rPtr}
+	entry := &entry.Pair[[]byte, uint64]{Key: internalKey, Val: rPtr}
 
 	// 4.a Add to Curr segment in sync.
 	head := s.segments[activeSegmentIdx]
