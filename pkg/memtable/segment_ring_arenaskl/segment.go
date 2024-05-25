@@ -74,7 +74,7 @@ func (s *Segment) StartListener() {
 		var entry *entry.Pair[[]byte, uint64]
 		var isQueueOpen bool
 
-		var it *arenaskl.Iterator
+		var it arenaskl.Iterator
 		it.Init(s.tree)
 		defer s.asyncKeyPtrChan.Close()
 		for {
@@ -108,7 +108,7 @@ func (s *Segment) AddIndex(entry *entry.Pair[[]byte, uint64]) {
 		time.Sleep(delay * time.Millisecond)
 		delay = delay * 2
 	}
-	var it *arenaskl.Iterator
+	var it arenaskl.Iterator
 	it.Init(s.tree)
 	_ = it.Add(entry.Key, EncodeUint64(&entry.Val), 0)
 }

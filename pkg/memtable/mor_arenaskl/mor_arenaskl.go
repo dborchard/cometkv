@@ -96,7 +96,7 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 		iter.Init(s.segments[pos])
 		_ = iter.Seek(internalKey)
 		if iter.Valid() {
-			heap.Push(mh, &iter)
+			heap.Push(mh, iter)
 		}
 	}
 
@@ -107,13 +107,13 @@ func (s *MoRArenaSkl) Scan(startKey string, count int, snapshotTs time.Time) []e
 	snapshotTsNano := timestamp.ToUnit64(snapshotTs)
 
 	for mh.Len() > 0 {
-		smallestIter := heap.Pop(mh).(*arenaskl.Iterator)
+		smallestIter := heap.Pop(mh).(arenaskl.Iterator)
 		itemKey := smallestIter.Key()
 		itemVal := smallestIter.Value()
 		if smallestIter.Next(); smallestIter.Valid() {
 			heap.Push(mh, smallestIter)
 		} else {
-			smallestIter = nil
+			smallestIter = arenaskl.Iterator{}
 		}
 
 		// 3.b scan logic

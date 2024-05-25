@@ -5,7 +5,7 @@ import (
 	"github.com/dborchard/cometkv/pkg/y/entry"
 )
 
-type MinHeap []*arenaskl.Iterator
+type MinHeap []arenaskl.Iterator
 
 func (m MinHeap) Len() int { return len(m) }
 func (m MinHeap) Less(i, j int) bool {
@@ -20,14 +20,14 @@ func (m MinHeap) Less(i, j int) bool {
 func (m MinHeap) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
 
 func (m *MinHeap) Push(x interface{}) {
-	*m = append(*m, x.(*arenaskl.Iterator))
+	*m = append(*m, x.(arenaskl.Iterator))
 }
 
 func (m *MinHeap) Pop() interface{} {
 	old := *m
 	n := len(old)
 	x := old[n-1]
-	old[n-1] = nil
+	old[n-1] = arenaskl.Iterator{}
 	*m = old[0 : n-1]
 	return x
 }
