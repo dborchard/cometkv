@@ -6,13 +6,14 @@ import (
 	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl"
 	"github.com/dborchard/cometkv/pkg/y/entry"
 	"github.com/dborchard/cometkv/pkg/y/timestamp"
+	"math"
 	"runtime"
 	"sync/atomic"
 	"time"
 )
 
 const (
-	MaxArenaSize = 1 << 20
+	MaxArenaSize = math.MaxUint32
 )
 
 type Segment struct {
@@ -93,7 +94,7 @@ func (s *Segment) StartListener() {
 func (s *Segment) AddValue(val []byte) (lePtr uint64) {
 	offset, err := s.vlog.Alloc(uint32(len(val)), 0, arenaskl.Align1)
 	if err != nil {
-		panic("value is too large")
+		panic(err)
 	}
 
 	copy(s.vlog.GetBytes(offset, uint32(len(val))), val)
