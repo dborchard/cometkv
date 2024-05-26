@@ -6,14 +6,13 @@ import (
 	"github.com/dborchard/cometkv/pkg/memtable/mor_arenaskl/arenaskl"
 	"github.com/dborchard/cometkv/pkg/y/entry"
 	"github.com/dborchard/cometkv/pkg/y/timestamp"
-	"math"
 	"runtime"
 	"sync/atomic"
 	"time"
 )
 
 const (
-	MaxArenaSize = math.MaxUint32
+	MaxArenaSize = 1 << 20
 )
 
 type Segment struct {
