@@ -23,7 +23,7 @@ func NewMemtable(typ memtable.Typ, gcInterval, ttl time.Duration, logStats bool,
 		tree = segment_ring.New(gcInterval, ttl, logStats, ctx)
 
 	case memtable.SegmentArenaSkl:
-		segment_ring_arenaskl.New(gcInterval, ttl, logStats, ctx)
+		tree = segment_ring_arenaskl.New(gcInterval, ttl, logStats, ctx)
 
 	case memtable.VacuumSkipList:
 		tree = vacuum_skiplist.New(gcInterval, ttl, logStats, ctx)
