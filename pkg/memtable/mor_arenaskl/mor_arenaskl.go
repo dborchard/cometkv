@@ -49,7 +49,7 @@ func (s *MoRArenaSkl) init(size int) {
 }
 
 func (s *MoRArenaSkl) Name() string {
-	return "mor_cow"
+	return "mor_arena_skl"
 }
 
 func (s *MoRArenaSkl) Put(key string, val []byte) {

@@ -62,7 +62,7 @@ func (s *SegmentRing) init(size int, ctx context.Context) {
 }
 
 func (s *SegmentRing) Name() string {
-	return "segment_ring"
+	return "segment_ring_arena_skl"
 }
 
 func (s *SegmentRing) Put(key string, val []byte) {
